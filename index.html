@@ -4,346 +4,186 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>CryptoQuant Pro</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>CryptoQuant Pro Trader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        body {
-            background: #000000;
-            color: #ffffff;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        
-        .ticker {
-            font-family: 'Courier New', monospace;
-            font-variant-numeric: tabular-nums;
-        }
-        
-        .header {
-            background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid #333;
-            padding: 10px 15px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-        }
-        
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            display: inline-block;
-            animation: pulse 1s infinite;
-            margin-right: 8px;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
+        * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        body { background: #0a0a0a; color: #e5e5e5; padding-top: env(safe-area-inset-top); overscroll-behavior: none; }
+        .glass { background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .gradient-text { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .signal-sell { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); }
+        .metric-card { background: linear-gradient(145deg, #1c1c1e 0%, #2c2c2e 100%); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .level-support { border-left: 3px solid #10b981; }
+        .level-resistance { border-left: 3px solid #ef4444; }
+        .level-pivot { border-left: 3px solid #3b82f6; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
         .price-up { color: #10b981; }
         .price-down { color: #ef4444; }
-        
-        @keyframes flash-green {
-            0%, 100% { background: transparent; }
-            50% { background: rgba(16, 185, 129, 0.2); }
-        }
-        @keyframes flash-red {
-            0%, 100% { background: transparent; }
-            50% { background: rgba(239, 68, 68, 0.2); }
-        }
-        
-        .flash-buy { animation: flash-green 0.3s; }
-        .flash-sell { animation: flash-red 0.3s; }
-        
-        .main-content {
-            padding-top: 120px;
-            padding-bottom: 100px;
-        }
-        
-        .card {
-            background: #1c1c1e;
-            border-radius: 12px;
-            margin: 10px 15px;
-            padding: 15px;
-            border: 1px solid #333;
-        }
-        
-        .upload-area {
-            border: 2px dashed #3b82f6;
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            background: rgba(59, 130, 246, 0.05);
-        }
-        
-        .metric {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #333;
-        }
-        
-        .metric:last-child { border-bottom: none; }
-        
-        .btn {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-        }
-        
-        .btn-green { background: #10b981; }
-        .btn-red { background: #ef4444; }
-        
-        .order-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            font-size: 12px;
-        }
-        
-        .trade-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 3px 0;
-            font-size: 11px;
-        }
-        
-        .status {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: bold;
-            z-index: 101;
-        }
-        
-        .status-connected { background: #10b981; color: black; }
-        .status-connecting { background: #f59e0b; color: black; }
-        .status-error { background: #ef4444; color: white; }
-        
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid #333;
-            padding: 10px 15px;
-            display: flex;
-            gap: 10px;
-        }
-        
-        input {
-            background: #2c2c2e;
-            border: 1px solid #444;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            width: 100%;
-        }
-        
-        .hidden { display: none !important; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .animate-pulse-custom { animation: pulse 1s infinite; }
     </style>
 </head>
-<body>
-    <div id="status" class="status status-connecting">Conectando...</div>
-
-    <div class="header">
-        <div style="display: flex; align-items: center; margin-bottom: 5px;">
-            <span class="live-dot"></span>
-            <span style="font-size: 12px; color: #888;">BTC/USDT Perpetual</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+<body class="min-h-screen bg-black">
+    <header class="fixed top-0 left-0 right-0 z-50 glass border-b border-gray-800 safe-top">
+        <div class="flex justify-between items-center px-4 py-3">
             <div>
-                <div id="main-price" class="ticker" style="font-size: 28px; font-weight: bold;">0.00000000</div>
-                <div id="price-change" style="font-size: 14px;"></div>
+                <h1 class="text-lg font-bold gradient-text">CryptoQuant Pro</h1>
+                <p class="text-[10px] text-gray-500 mono"><span id="conn-status" class="status-dot bg-yellow-500 animate-pulse-custom"></span> <span id="status-text">CONECTANDO</span></p>
             </div>
-            <div style="text-align: right; font-size: 11px; color: #888;">
-                <div>24h High: <span id="high-24h" class="ticker">0.00</span></div>
-                <div>24h Low: <span id="low-24h" class="ticker">0.00</span></div>
-                <div>Funding: <span id="funding" class="ticker price-down">0.0000</span></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="main-content">
-        <div class="card">
-            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">MÉTRICAS AO VIVO</h3>
-            <div class="metric"><span>RSI (14)</span><span id="rsi" class="ticker">0.00</span></div>
-            <div class="metric"><span>SOPR Estimado</span><span id="sopr" class="ticker">0.00</span></div>
-            <div class="metric"><span>Open Interest</span><span id="oi" class="ticker">0.00</span></div>
-            <div class="metric"><span>Liquidations 1h</span><span id="liq" class="ticker">0.00</span></div>
-        </div>
-
-        <div class="card">
-            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">ORDER BOOK (L2)</h3>
-            <div id="asks" style="margin-bottom: 10px;"></div>
-            <div style="text-align: center; padding: 10px 0; border-top: 1px solid #333; border-bottom: 1px solid #333;">
-                <span id="spread" class="ticker" style="font-size: 16px; font-weight: bold;">0.00</span>
-            </div>
-            <div id="bids" style="margin-top: 10px;"></div>
-        </div>
-
-        <div class="card">
-            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">TRADES RECENTES</h3>
-            <div id="trades" style="max-height: 150px; overflow: hidden;"></div>
-        </div>
-
-        <div class="card">
-            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">ANÁLISE DE IMAGENS</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                <div class="upload-area" onclick="document.getElementById('file1').click()">
-                    <input type="file" id="file1" accept="image/*" style="display: none;" onchange="handleImage(0, this)">
-                    <div id="preview1-container"><div>📊</div><div style="font-size: 11px; color: #3b82f6;">Gráfico</div></div>
-                    <img id="preview1" style="width: 100%; display: none; border-radius: 8px;">
+            <div class="flex items-center space-x-2">
+                <div class="text-right mr-2">
+                    <div class="text-xs text-gray-400">BTC/USDT</div>
+                    <div class="text-lg font-bold mono" id="btc-price">$0.00</div>
                 </div>
-                <div class="upload-area" onclick="document.getElementById('file2').click()">
-                    <input type="file" id="file2" accept="image/*" style="display: none;" onchange="handleImage(1, this)">
-                    <div id="preview2-container"><div>📈</div><div style="font-size: 11px; color: #8b5cf6;">On-Chain</div></div>
-                    <img id="preview2" style="width: 100%; display: none; border-radius: 8px;">
+                <div id="change-box" class="w-12 h-10 rounded-lg flex items-center justify-center bg-gray-800">
+                    <span id="price-change" class="font-bold text-[10px]">0%</span>
                 </div>
             </div>
-            <button class="btn" id="analyze-btn" onclick="analyzeImages()" disabled>Analisar Imagens</button>
+        </div>
+    </header>
+
+    <main class="pt-24 pb-24 px-4 max-w-lg mx-auto">
+        <div class="mb-6 p-4 rounded-2xl signal-sell text-white shadow-lg shadow-red-500/20">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <div class="text-xs opacity-80 mb-1 uppercase">Sinal Baseado em Fluxo</div>
+                    <div class="text-2xl font-bold">AGUARDAR FUNDO</div>
+                </div>
+                <div class="text-right"><div class="text-3xl font-bold mono">C</div><div class="text-xs opacity-80">Capitulação</div></div>
+            </div>
         </div>
 
-        <div id="analysis-result" class="card hidden">
-            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">ANÁLISE CRUZADA</h3>
-            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
-                <div style="font-size: 14px; font-weight: bold; color: #3b82f6; margin-bottom: 5px;">CONFLUÊNCIA DETECTADA</div>
-                <div style="font-size: 12px; color: #ccc;">
-                    Gráfico: <span class="price-down">Baixa Forte</span> + On-Chain: <span class="price-down">Capitulação</span> + Tempo Real: <span id="real-signal">Aguardando...</span>
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="metric-card p-3 rounded-xl text-center">
+                <div class="text-xs text-gray-500 mb-1">RSI (14)</div>
+                <div id="rsi" class="text-lg font-bold mono">0.00</div>
+            </div>
+            <div class="metric-card p-3 rounded-xl text-center">
+                <div class="text-xs text-gray-500 mb-1">Funding Rate</div>
+                <div id="funding" class="text-lg font-bold mono">0.0000</div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Níveis Críticos (Auto-Pivot)</h3>
+            <div class="space-y-2">
+                <div class="metric-card p-3 rounded-xl level-resistance flex justify-between items-center">
+                    <div>
+                        <div class="text-[10px] text-red-400">RESISTÊNCIA 24H</div>
+                        <div id="high-24h" class="text-md font-bold mono">$0.00</div>
+                    </div>
+                </div>
+                <div class="metric-card p-3 rounded-xl level-pivot flex justify-between items-center border-blue-500/50">
+                    <div>
+                        <div class="text-[10px] text-blue-400">PREÇO ATUAL</div>
+                        <div id="pivot-price" class="text-md font-bold mono">$0.00</div>
+                    </div>
+                    <div class="text-right"><div class="text-[10px] text-gray-400">Status</div><div class="text-xs text-yellow-400">Pivotando</div></div>
+                </div>
+                <div class="metric-card p-3 rounded-xl level-support flex justify-between items-center">
+                    <div>
+                        <div class="text-[10px] text-green-400">SUPORTE 24H</div>
+                        <div id="low-24h" class="text-md font-bold mono">$0.00</div>
+                    </div>
                 </div>
             </div>
-            <div style="font-size: 11px; color: #888; line-height: 1.5;">
-                • Preço alvo análise: <span class="ticker">$65,200</span><br>
-                • Preço tempo real: <span id="real-price" class="ticker">0.00</span><br>
-                • Recomendação: <span style="color: #f59e0b;">Aguardar fundo em $65k</span>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Order Book L2</h3>
+            <div class="glass rounded-xl p-3 mono text-[11px]">
+                <div id="asks" class="text-red-400 space-y-1 mb-2"></div>
+                <div id="book-price" class="py-2 text-center border-y border-gray-800 font-bold text-sm text-white">0.00</div>
+                <div id="bids" class="text-green-400 space-y-1 mt-2"></div>
             </div>
         </div>
-    </div>
 
-    <div class="bottom-nav">
-        <div style="flex: 1;"><input type="number" id="amount" placeholder="0.00 BTC" style="font-size: 14px;"></div>
-        <button class="btn btn-green" onclick="trade('buy')" style="flex: 1; margin: 0;">COMPRAR</button>
-        <button class="btn btn-red" onclick="trade('sell')" style="flex: 1; margin: 0;">VENDER</button>
+        <div class="metric-card rounded-2xl p-4 border border-blue-500/20">
+            <h3 class="text-xs font-semibold text-blue-400 mb-3 uppercase">Análise de Imagens</h3>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center text-xs text-gray-500" onclick="document.getElementById('f1').click()">
+                    <input type="file" id="f1" class="hidden" onchange="preview(this, 'p1')">
+                    <span id="p1">Gráfico</span>
+                </div>
+                <div class="h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center text-xs text-gray-500" onclick="document.getElementById('f2').click()">
+                    <input type="file" id="f2" class="hidden" onchange="preview(this, 'p2')">
+                    <span id="p2">On-Chain</span>
+                </div>
+            </div>
+            <button class="w-full bg-blue-600 py-3 rounded-xl font-bold text-sm">ANALISAR CONFLUÊNCIA</button>
+        </div>
+    </main>
+
+    <div class="fixed bottom-0 left-0 right-0 glass border-t border-gray-800 safe-bottom p-4">
+        <div class="flex space-x-3 max-w-lg mx-auto">
+            <button class="flex-1 py-3 text-sm font-semibold bg-green-600 rounded-xl">COMPRAR</button>
+            <button class="flex-1 py-3 text-sm font-semibold bg-red-600 rounded-xl">VENDER</button>
+        </div>
     </div>
 
     <script>
         const WS_URL = window.location.origin.replace(/^http/, 'ws');
         let ws = null;
-        let images = [null, null];
-        let currentPrice = 0;
 
         function connect() {
-            const status = document.getElementById('status');
             ws = new WebSocket(WS_URL);
             ws.onopen = () => {
-                status.textContent = 'LIVE';
-                status.className = 'status status-connected';
+                document.getElementById('conn-status').className = 'status-dot bg-green-500 animate-pulse-custom';
+                document.getElementById('status-text').innerText = 'LIVE';
             };
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                updateUI(data);
+                updateDashboard(data);
             };
             ws.onclose = () => {
-                status.textContent = 'Reconectando...';
-                status.className = 'status status-connecting';
+                document.getElementById('conn-status').className = 'status-dot bg-red-500';
+                document.getElementById('status-text').innerText = 'OFFLINE';
                 setTimeout(connect, 3000);
             };
         }
 
-        function updateUI(data) {
-            currentPrice = data.price;
-            const priceEl = document.getElementById('main-price');
-            priceEl.textContent = data.price.toLocaleString('en-US', { minimumFractionDigits: 8 });
+        function updateDashboard(data) {
+            const priceStr = data.price.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('btc-price').innerText = '$' + priceStr;
+            document.getElementById('pivot-price').innerText = '$' + priceStr;
+            document.getElementById('book-price').innerText = priceStr;
             
-            document.getElementById('price-change').innerHTML = `<span class="${data.change24h >= 0 ? 'price-up' : 'price-down'}">${data.change24h >= 0 ? '+' : ''}${data.change24h.toFixed(2)}%</span>`;
-            document.getElementById('high-24h').textContent = data.high24h.toLocaleString();
-            document.getElementById('low-24h').textContent = data.low24h.toLocaleString();
-            document.getElementById('rsi').textContent = data.rsi.toFixed(2);
-            document.getElementById('oi').textContent = data.openInterest.toFixed(2);
-            document.getElementById('liq').textContent = '$' + data.liquidations.toFixed(2) + 'M';
-            document.getElementById('real-price').textContent = '$' + data.price.toLocaleString();
-            document.getElementById('spread').textContent = data.price.toLocaleString();
-            
-            updateOrderBook(data.orderBook);
-            updateTrades(data.trades);
+            // RSI e Funding
+            document.getElementById('rsi').innerText = data.rsi.toFixed(2);
+            document.getElementById('rsi').className = data.rsi < 30 ? 'text-green-400 font-bold' : (data.rsi > 70 ? 'text-red-400 font-bold' : 'text-white');
+            document.getElementById('funding').innerText = data.funding.toFixed(4);
+
+            // High/Low
+            document.getElementById('high-24h').innerText = '$' + data.high24h.toLocaleString();
+            document.getElementById('low-24h').innerText = '$' + data.low24h.toLocaleString();
+
+            // Variação 24h
+            const changeEl = document.getElementById('price-change');
+            changeEl.innerText = (data.change24h > 0 ? '+' : '') + data.change24h.toFixed(2) + '%';
+            document.getElementById('change-box').className = data.change24h >= 0 ? 'w-12 h-10 rounded-lg flex items-center justify-center bg-green-500/20 text-green-400' : 'w-12 h-10 rounded-lg flex items-center justify-center bg-red-500/20 text-red-400';
+
+            // Order Book Real
+            updateBook('asks', data.orderBook.asks);
+            updateBook('bids', data.orderBook.bids);
         }
 
-        function updateOrderBook(book) {
-            let asksHtml = '';
-            book.asks.forEach(([price, size]) => {
-                asksHtml += `<div class="order-row"><span class="price-down ticker">${price}</span><span style="color:#888">${size}</span></div>`;
-            });
-            document.getElementById('asks').innerHTML = asksHtml;
-            
-            let bidsHtml = '';
-            book.bids.forEach(([price, size]) => {
-                bidsHtml += `<div class="order-row"><span class="price-up ticker">${price}</span><span style="color:#888">${size}</span></div>`;
-            });
-            document.getElementById('bids').innerHTML = bidsHtml;
-        }
-
-        function updateTrades(trades) {
+        function updateBook(id, orders) {
             let html = '';
-            trades.forEach(t => {
-                html += `<div class="trade-row"><span class="${t.isBuyer ? 'price-up' : 'price-down'}">${t.price.toFixed(2)}</span><span>${t.time}</span></div>`;
+            orders.slice(0, 4).forEach(o => {
+                html += `<div class="flex justify-between"><span>${parseFloat(o[0]).toFixed(1)}</span><span class="opacity-50">${parseFloat(o[1]).toFixed(3)}</span></div>`;
             });
-            document.getElementById('trades').innerHTML = html;
+            document.getElementById(id).innerHTML = html;
         }
 
-        function handleImage(index, input) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                images[index] = e.target.result;
-                document.getElementById(`preview${index + 1}`).src = e.target.result;
-                document.getElementById(`preview${index + 1}`).style.display = 'block';
-                document.getElementById(`preview${index + 1}-container`).style.display = 'none';
-                checkAnalyzeButton();
-            };
-            reader.readAsDataURL(file);
+        function preview(input, id) {
+            if (input.files && input.files[0]) {
+                document.getElementById(id).innerText = "Anexo: " + input.files[0].name.substring(0, 10) + "...";
+                document.getElementById(id).classList.add('text-blue-400');
+            }
         }
-
-        function checkAnalyzeButton() {
-            const hasImages = images.some(i => i !== null);
-            document.getElementById('analyze-btn').disabled = !hasImages;
-            document.getElementById('analyze-btn').style.opacity = hasImages ? '1' : '0.5';
-        }
-
-        function analyzeImages() {
-            document.getElementById('analysis-result').classList.remove('hidden');
-            document.getElementById('real-signal').textContent = currentPrice > 70000 ? 'Resistência' : 'Suporte';
-        }
-
-        function trade(side) { alert(`${side.toUpperCase()} ordem enviada!`); }
 
         connect();
     </script>
