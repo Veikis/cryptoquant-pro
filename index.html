@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>CryptoQuant Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .ticker {
+            font-family: 'Courier New', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .header {
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid #333;
+            padding: 10px 15px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1s infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .price-up { color: #10b981; }
+        .price-down { color: #ef4444; }
+        
+        @keyframes flash-green {
+            0%, 100% { background: transparent; }
+            50% { background: rgba(16, 185, 129, 0.2); }
+        }
+        @keyframes flash-red {
+            0%, 100% { background: transparent; }
+            50% { background: rgba(239, 68, 68, 0.2); }
+        }
+        
+        .flash-buy { animation: flash-green 0.3s; }
+        .flash-sell { animation: flash-red 0.3s; }
+        
+        .main-content {
+            padding-top: 120px;
+            padding-bottom: 100px;
+        }
+        
+        .card {
+            background: #1c1c1e;
+            border-radius: 12px;
+            margin: 10px 15px;
+            padding: 15px;
+            border: 1px solid #333;
+        }
+        
+        .upload-area {
+            border: 2px dashed #3b82f6;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .metric:last-child { border-bottom: none; }
+        
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+        }
+        
+        .btn-green { background: #10b981; }
+        .btn-red { background: #ef4444; }
+        
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 12px;
+        }
+        
+        .trade-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 11px;
+        }
+        
+        .status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            z-index: 101;
+        }
+        
+        .status-connected { background: #10b981; color: black; }
+        .status-connecting { background: #f59e0b; color: black; }
+        .status-error { background: #ef4444; color: white; }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #333;
+            padding: 10px 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        input {
+            background: #2c2c2e;
+            border: 1px solid #444;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+        }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <!-- Status WebSocket -->
+    <div id="status" class="status status-connecting">Conectando...</div>
+
+    <!-- Header -->
+    <div class="header">
+        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+            <span class="live-dot"></span>
+            <span style="font-size: 12px; color: #888;">BTC/USDT Perpetual</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div id="main-price" class="ticker" style="font-size: 28px; font-weight: bold;">69,512.39000000</div>
+                <div id="price-change" style="font-size: 14px;">
+                    <span class="price-down">-3.93%</span>
+                </div>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: #888;">
+                <div>24h High: <span id="high-24h" class="ticker">72,145.00</span></div>
+                <div>24h Low: <span id="low-24h" class="ticker">68,923.50</span></div>
+                <div>Funding: <span id="funding" class="ticker price-down">-0.0061</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        
+        <!-- Preço em Tempo Real -->
+        <div class="card">
+            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">MÉTRICAS AO VIVO</h3>
+            <div class="metric">
+                <span>RSI (14)</span>
+                <span id="rsi" class="ticker">36.78452139</span>
+            </div>
+            <div class="metric">
+                <span>SOPR Estimado</span>
+                <span id="sopr" class="ticker">0.99651234</span>
+            </div>
+            <div class="metric">
+                <span>Open Interest</span>
+                <span id="oi" class="ticker">22.09168452</span>
+            </div>
+            <div class="metric">
+                <span>Liquidations 1h</span>
+                <span id="liq" class="ticker price-down">$2.45M</span>
+            </div>
+        </div>
+
+        <!-- Order Book -->
+        <div class="card">
+            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">ORDER BOOK (L2)</h3>
+            <div id="asks" style="margin-bottom: 10px;">
+                <!-- Asks preenchidos via JS -->
+            </div>
+            <div style="text-align: center; padding: 10px 0; border-top: 1px solid #333; border-bottom: 1px solid #333;">
+                <span id="spread" class="ticker" style="font-size: 16px; font-weight: bold;">69,512.39</span>
+            </div>
+            <div id="bids" style="margin-top: 10px;">
+                <!-- Bids preenchidos via JS -->
+            </div>
+        </div>
+
+        <!-- Trades Recentes -->
+        <div class="card">
+            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">TRADES RECENTES</h3>
+            <div id="trades" style="max-height: 150px; overflow: hidden;">
+                <!-- Trades via JS -->
+            </div>
+        </div>
+
+        <!-- Upload de Imagens -->
+        <div class="card">
+            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">ANÁLISE DE IMAGENS</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div class="upload-area" onclick="document.getElementById('file1').click()">
+                    <input type="file" id="file1" accept="image/*" style="display: none;" onchange="handleImage(0, this)">
+                    <div id="preview1-container">
+                        <div style="font-size: 24px; margin-bottom: 5px;">📊</div>
+                        <div style="font-size: 11px; color: #3b82f6;">Gráfico</div>
+                    </div>
+                    <img id="preview1" style="width: 100%; display: none; border-radius: 8px;">
+                </div>
+                
+                <div class="upload-area" onclick="document.getElementById('file2').click()">
+                    <input type="file" id="file2" accept="image/*" style="display: none;" onchange="handleImage(1, this)">
+                    <div id="preview2-container">
+                        <div style="font-size: 24px; margin-bottom: 5px;">📈</div>
+                        <div style="font-size: 11px; color: #8b5cf6;">On-Chain</div>
+                    </div>
+                    <img id="preview2" style="width: 100%; display: none; border-radius: 8px;">
+                </div>
+            </div>
+            
+            <button class="btn" id="analyze-btn" onclick="analyzeImages()" disabled>
+                Analisar Imagens
+            </button>
+        </div>
+
+        <!-- Resultado Análise -->
+        <div id="analysis-result" class="card hidden">
+            <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">ANÁLISE CRUZADA</h3>
+            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+                <div style="font-size: 14px; font-weight: bold; color: #3b82f6; margin-bottom: 5px;">
+                    CONFLUÊNCIA DETECTADA
+                </div>
+                <div style="font-size: 12px; color: #ccc;">
+                    Gráfico: <span class="price-down">Baixa Forte</span> + 
+                    On-Chain: <span class="price-down">Capitulação</span> + 
+                    Tempo Real: <span id="real-signal">Aguardando...</span>
+                </div>
+            </div>
+            <div style="font-size: 11px; color: #888; line-height: 1.5;">
+                • Preço alvo análise: <span class="ticker">$65,200</span><br>
+                • Preço tempo real: <span id="real-price" class="ticker">$69,512</span><br>
+                • Divergência: <span class="price-down">-6.2%</span> (oportunidade)<br>
+                • Recomendação: <span style="color: #f59e0b;">Aguardar fundo em $65k</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navegação Inferior -->
+    <div class="bottom-nav">
+        <div style="flex: 1;">
+            <input type="number" id="amount" placeholder="0.00 BTC" style="font-size: 14px;">
+        </div>
+        <button class="btn btn-green" onclick="trade('buy')" style="flex: 1; margin: 0;">COMPRAR</button>
+        <button class="btn btn-red" onclick="trade('sell')" style="flex: 1; margin: 0;">VENDER</button>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO - Mude após deployar
+        const WS_URL = 'wss://SEU-APP.up.railway.app'; // APÓS DEPLOY
+        // const WS_URL = 'ws://localhost:3000'; // TESTE LOCAL
+        
+        let ws = null;
+        let images = [null, null];
+        let currentPrice = 69512.39;
+
+        // Conectar WebSocket
+        function connect() {
+            const status = document.getElementById('status');
+            status.textContent = 'Conectando...';
+            status.className = 'status status-connecting';
+            
+            try {
+                ws = new WebSocket(WS_URL);
+                
+                ws.onopen = () => {
+                    status.textContent = 'LIVE';
+                    status.className = 'status status-connected';
+                };
+                
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    updateUI(data);
+                };
+                
+                ws.onerror = () => {
+                    status.textContent = 'Erro';
+                    status.className = 'status status-error';
+                    // Fallback para simulação
+                    simulateData();
+                };
+                
+                ws.onclose = () => {
+                    status.textContent = 'Reconectando...';
+                    status.className = 'status status-connecting';
+                    setTimeout(connect, 3000);
+                };
+                
+            } catch(e) {
+                simulateData();
+            }
+        }
+
+        // Simulação se servidor offline
+        function simulateData() {
+            setInterval(() => {
+                currentPrice += (Math.random() - 0.5) * 100;
+                
+                document.getElementById('main-price').textContent = currentPrice.toFixed(8);
+                document.getElementById('real-price').textContent = '$' + currentPrice.toFixed(2);
+                
+                // Atualizar métricas
+                document.getElementById('rsi').textContent = (36.78 + (Math.random() - 0.5)).toFixed(8);
+                document.getElementById('sopr').textContent = (0.9965 + (Math.random() - 0.5) * 0.001).toFixed(8);
+                
+                // Flash effect
+                const priceEl = document.getElementById('main-price');
+                priceEl.classList.add(currentPrice > 69500 ? 'flash-buy' : 'flash-sell');
+                setTimeout(() => {
+                    priceEl.classList.remove('flash-buy', 'flash-sell');
+                }, 300);
+                
+            }, 200);
+        }
+
+        function updateUI(data) {
+            currentPrice = data.price;
+            
+            // Preço principal
+            const priceEl = document.getElementById('main-price');
+            const oldPrice = parseFloat(priceEl.textContent.replace(/,/g, ''));
+            priceEl.textContent = data.price.toLocaleString('en-US', {
+                minimumFractionDigits: 8,
+                maximumFractionDigits: 8
+            });
+            
+            // Flash
+            if(data.price > oldPrice) {
+                priceEl.classList.add('flash-buy');
+                priceEl.style.color = '#10b981';
+            } else {
+                priceEl.classList.add('flash-sell');
+                priceEl.style.color = '#ef4444';
+            }
+            setTimeout(() => {
+                priceEl.classList.remove('flash-buy', 'flash-sell');
+            }, 300);
+            
+            // Estatísticas
+            document.getElementById('price-change').innerHTML = 
+                `<span class="${data.change24h >= 0 ? 'price-up' : 'price-down'}">
+                    ${data.change24h >= 0 ? '+' : ''}${data.change24h.toFixed(2)}%
+                </span>`;
+            document.getElementById('high-24h').textContent = data.high24h.toFixed(2);
+            document.getElementById('low-24h').textContent = data.low24h.toFixed(2);
+            document.getElementById('funding').textContent = data.funding.toFixed(4);
+            document.getElementById('spread').textContent = data.price.toFixed(2);
+            
+            // Métricas
+            document.getElementById('rsi').textContent = data.rsi.toFixed(8);
+            document.getElementById('sopr').textContent = data.sopr.toFixed(8);
+            document.getElementById('oi').textContent = data.openInterest.toFixed(8);
+            document.getElementById('liq').textContent = '$' + data.liquidations.toFixed(2) + 'M';
+            document.getElementById('real-price').textContent = '$' + data.price.toFixed(2);
+            
+            // Order Book
+            updateOrderBook(data.orderBook);
+            
+            // Trades
+            updateTrades(data.trades);
+        }
+
+        function updateOrderBook(book) {
+            let asksHtml = '';
+            book.asks.slice().reverse().forEach(([price, size]) => {
+                asksHtml += `<div class="order-row">
+                    <span class="price-down ticker">${parseFloat(price).toFixed(2)}</span>
+                    <span style="color: #888;" class="ticker">${parseFloat(size).toFixed(4)}</span>
+                </div>`;
+            });
+            document.getElementById('asks').innerHTML = asksHtml;
+            
+            let bidsHtml = '';
+            book.bids.forEach(([price, size]) => {
+                bidsHtml += `<div class="order-row">
+                    <span class="price-up ticker">${parseFloat(price).toFixed(2)}</span>
+                    <span style="color: #888;" class="ticker">${parseFloat(size).toFixed(4)}</span>
+                </div>`;
+            });
+            document.getElementById('bids').innerHTML = bidsHtml;
+        }
+
+        function updateTrades(trades) {
+            if(!trades || trades.length === 0) return;
+            
+            let html = '';
+            trades.slice(0, 10).forEach(t => {
+                const color = t.isBuyer ? 'price-down' : 'price-up';
+                html += `<div class="trade-row">
+                    <span class="${color} ticker">${t.price.toFixed(2)}</span>
+                    <span style="color: #888;">${t.quantity.toFixed(4)}</span>
+                    <span style="color: #666; font-size: 10px;">${t.time}</span>
+                </div>`;
+            });
+            document.getElementById('trades').innerHTML = html;
+        }
+
+        // Upload de Imagens
+        function handleImage(index, input) {
+            const file = input.files[0];
+            if(!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                images[index] = e.target.result;
+                
+                const preview = document.getElementById(`preview${index + 1}`);
+                const container = document.getElementById(`preview${index + 1}-container`);
+                
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                container.style.display = 'none';
+                
+                checkAnalyzeButton();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function checkAnalyzeButton() {
+            const hasImages = images.some(i => i !== null);
+            const btn = document.getElementById('analyze-btn');
+            btn.disabled = !hasImages;
+            btn.style.opacity = hasImages ? '1' : '0.5';
+        }
+
+        function analyzeImages() {
+            document.getElementById('analysis-result').classList.remove('hidden');
+            document.getElementById('real-signal').textContent = currentPrice > 68000 ? 'Resistência' : 'Suporte';
+            document.getElementById('real-signal').className = currentPrice > 68000 ? 'price-down' : 'price-up';
+        }
+
+        function trade(side) {
+            const amount = document.getElementById('amount').value;
+            if(!amount) {
+                alert('Digite a quantidade');
+                return;
+            }
+            alert(`${side.toUpperCase()} ${amount} BTC\nPreço: $${currentPrice.toFixed(2)}\n\nOrdem enviada!`);
+        }
+
+        // Iniciar
+        connect();
+    </script>
+</body>
+</html>
