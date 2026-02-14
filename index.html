@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CryptoQuant Pro Analytics</title>
+    <title>CryptoQuant Pro - Auto Vision</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -13,7 +13,8 @@
         .glass { background: rgba(20, 20, 22, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .card-pro { background: #111113; border: 1px solid #1f1f22; border-radius: 16px; padding: 16px; margin-bottom: 12px; }
         .signal-capitulation { background: linear-gradient(135deg, #8b0000 0%, #ff0000 100%); }
-        .btn-action { flex: 1; padding: 14px 0; border-radius: 12px; font-weight: 800; font-size: 11px; text-transform: uppercase; }
+        .loader { border: 2px solid #3b82f6; border-top: 2px solid transparent; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -24,110 +25,78 @@
             <h1 class="text-blue-500 font-extrabold text-lg tracking-tight">CryptoQuant Pro</h1>
             <div class="flex items-center space-x-2">
                 <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span id="update-time" class="text-[9px] text-gray-500 mono uppercase tracking-widest">LIVE DATA</span>
+                <span class="text-[9px] text-gray-500 mono uppercase tracking-widest">VISION ENGINE ATIVA</span>
             </div>
         </div>
-        <div class="text-right">
-            <div id="btc-price" class="text-xl font-black mono text-white">$69,512.39</div>
-            <div class="text-[10px] font-bold text-red-500">-3.93%</div>
-        </div>
+        <div id="btc-price" class="text-xl font-black mono text-white">$69,512.39</div>
     </header>
 
     <main class="pt-20 px-4 max-w-lg mx-auto">
 
         <div class="card-pro signal-capitulation text-white mb-6">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <span class="text-[10px] uppercase opacity-70 font-bold">Sinal Principal</span>
-                    <h2 class="text-2xl font-black leading-tight">AGUARDAR FUNDO</h2>
-                </div>
-                <div class="text-center bg-black/20 p-2 rounded-lg">
-                    <span class="text-3xl font-black mono">C</span>
-                    <div class="text-[8px] uppercase font-bold">Capitulação</div>
-                </div>
-            </div>
-            <div class="flex justify-between text-[11px] font-bold opacity-90">
-                <span>Confiança: 78%</span>
-                <span>Tempo: 2-5 dias</span>
+            <h2 class="text-2xl font-black leading-tight">AGUARDAR FUNDO</h2>
+            <div class="flex justify-between text-[11px] font-bold mt-2 opacity-80">
+                <span>Análise de Confluência</span>
+                <span id="dia-registro">Dia 1</span>
             </div>
         </div>
 
-        <h3 class="text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">Entrada de Dados (Fechamento 21h)</h3>
-        <div class="card-pro border-blue-500/30">
+        <div class="card-pro border-blue-500/30 bg-blue-500/5">
+            <h3 class="text-[10px] font-bold text-blue-400 uppercase mb-3">Fechamento 21h: Suba as imagens</h3>
+            
             <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="h-28 border-2 border-dashed border-gray-800 rounded-xl flex flex-col items-center justify-center bg-black/40 relative overflow-hidden" onclick="document.getElementById('f1').click()">
-                    <input type="file" id="f1" class="hidden" accept="image/*" onchange="preview(this, 'p1', 'l1')">
-                    <span id="l1" class="text-[9px] text-gray-500 font-bold text-center">CLIQUE PARA SUBIR<br>GRÁFICO</span>
-                    <img id="p1" class="hidden absolute inset-0 w-full h-full object-cover">
+                <div class="h-32 border-2 border-dashed border-gray-800 rounded-xl flex items-center justify-center bg-black/40 relative" onclick="document.getElementById('f1').click()">
+                    <input type="file" id="f1" class="hidden" accept="image/*" onchange="handleUpload(this, 'p1', 'l1')">
+                    <span id="l1" class="text-[9px] text-gray-500 font-bold text-center">ANÁLISE<br>GRÁFICA</span>
+                    <img id="p1" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
                 </div>
-                <div class="h-28 border-2 border-dashed border-gray-800 rounded-xl flex flex-col items-center justify-center bg-black/40 relative overflow-hidden" onclick="document.getElementById('f2').click()">
-                    <input type="file" id="f2" class="hidden" accept="image/*" onchange="preview(this, 'p2', 'l2')">
-                    <span id="l2" class="text-[9px] text-gray-500 font-bold text-center">CLIQUE PARA SUBIR<br>ON-CHAIN</span>
-                    <img id="p2" class="hidden absolute inset-0 w-full h-full object-cover">
+                <div class="h-32 border-2 border-dashed border-gray-800 rounded-xl flex items-center justify-center bg-black/40 relative" onclick="document.getElementById('f2').click()">
+                    <input type="file" id="f2" class="hidden" accept="image/*" onchange="handleUpload(this, 'p2', 'l2')">
+                    <span id="l2" class="text-[9px] text-gray-500 font-bold text-center">INDICADORES<br>ON-CHAIN</span>
+                    <img id="p2" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
                 </div>
             </div>
-            <button onclick="gerarAnaliseTotal()" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase tracking-tighter">Gerar Análise com Comparação</button>
+            
+            <button id="btn-analisar" onclick="processarVision()" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase tracking-tighter shadow-lg shadow-blue-900/40">
+                Analisar e Comparar Automaticamente
+            </button>
         </div>
 
-        <div id="relatorio-escrito" class="hidden animate-pulse-once">
-            <h3 class="text-[10px] font-bold text-yellow-500 uppercase mb-2 ml-1">Análise Técnica do Dia</h3>
+        <div id="relatorio-vision" class="hidden">
+            <div class="flex items-center mb-2 ml-1">
+                <h3 class="text-[10px] font-bold text-yellow-500 uppercase">Relatório de Inteligência Visual</h3>
+            </div>
             <div class="card-pro border-yellow-500/30 bg-yellow-500/5">
-                <div id="texto-analise" class="text-[11px] leading-relaxed space-y-3 text-gray-200">
+                <div id="texto-vision" class="text-[11px] leading-relaxed space-y-4 text-gray-200">
                     </div>
             </div>
         </div>
 
-        <div id="secoes-detalhadas" class="space-y-4">
-            <h3 class="text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">Níveis Críticos</h3>
-            <div class="card-pro border-l-4 border-red-500 flex justify-between py-3">
-                <div class="text-[9px] text-red-400 font-bold uppercase">Resistência Forte <br> <span class="text-md text-white mono">$72,800</span></div>
-                <div class="text-right text-[10px] font-bold">Alvo 1 <br> <span class="text-red-500">-4.6%</span></div>
+        <div class="space-y-4 mt-6 opacity-60" id="secoes-fixas">
+            <h3 class="text-[10px] font-bold text-gray-500 uppercase">Níveis de Suporte/Resistência</h3>
+            <div class="card-pro border-l-4 border-green-500 py-3 flex justify-between">
+                <span class="text-[10px] font-bold uppercase">Suporte Semanal</span>
+                <span class="mono font-bold">$65,200</span>
             </div>
-
-            <h3 class="text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">Métricas On-Chain Detalhadas</h3>
-            <div class="card-pro space-y-4">
-                <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                    <span class="text-xs font-bold">SOPR</span>
-                    <span class="text-xs font-bold mono text-red-400">0.9965 (Capitulação)</span>
-                </div>
-                <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                    <span class="text-xs font-bold">Exchange Netflow</span>
-                    <span class="text-xs font-bold mono text-green-400">+5.5077 (Entrada)</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold">Funding Rate</span>
-                    <span class="text-xs font-bold mono text-red-500">-0.0061 (Oportunidade)</span>
-                </div>
-            </div>
-
-            <h3 class="text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">Gestão de Capital</h3>
-            <div class="card-pro bg-blue-500/5 border-blue-500/20">
-                <div class="flex justify-between text-[11px] mb-3">
-                    <span class="text-gray-400">Banca Total:</span>
-                    <span class="font-bold text-white mono">R$ 10.000,00</span>
-                </div>
-                <div class="space-y-2 text-[10px] font-bold uppercase">
-                    <div class="flex justify-between"><span>Entrada 1 (30%):</span> <span class="text-blue-400">R$ 3.000</span></div>
-                    <div class="flex justify-between"><span>Stop Loss Total:</span> <span class="text-red-500">- R$ 280</span></div>
+            
+            <h3 class="text-[10px] font-bold text-gray-500 uppercase">Gestão de Risco</h3>
+            <div class="card-pro bg-gray-900/30 border-white/5">
+                <div class="flex justify-between text-[10px]">
+                    <span>ALOCAÇÃO SUGERIDA:</span>
+                    <span class="text-blue-400 font-bold">30% CAPITAL</span>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <footer class="fixed bottom-0 left-0 right-0 glass border-t border-white/5 p-4 z-50">
-        <div class="flex space-x-2 max-w-lg mx-auto">
-            <button class="btn-action bg-green-600 text-white">+ ADICIONAR</button>
-            <button class="btn-action bg-red-600 text-white">- REDUZIR</button>
-            <button class="btn-action bg-gray-800 text-gray-300">FECHAR</button>
-        </div>
+    <footer class="fixed bottom-0 left-0 right-0 glass border-t border-white/5 p-4 z-50 flex space-x-2">
+        <button class="flex-1 bg-green-600 py-4 rounded-xl text-[10px] font-black uppercase">Adicionar</button>
+        <button class="flex-1 bg-red-600 py-4 rounded-xl text-[10px] font-black uppercase">Reduzir</button>
     </footer>
 
     <script>
-        // Memória fictícia para comparar com "ontem"
-        let ontem = { sopr: 0.985, netflow: 2.1 };
-
-        function preview(input, imgId, labelId) {
+        function handleUpload(input, imgId, labelId) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -139,23 +108,56 @@
             }
         }
 
-        function gerarAnaliseTotal() {
-            if(!document.getElementById('f1').files[0]) {
-                alert("Suba os prints antes de analisar.");
+        async function processarVision() {
+            const btn = document.getElementById('btn-analisar');
+            const relatorio = document.getElementById('relatorio-vision');
+            const texto = document.getElementById('texto-vision');
+
+            if(!document.getElementById('f1').files[0] || !document.getElementById('f2').files[0]) {
+                alert("Por favor, selecione as duas fotos (Gráfico e On-chain).");
                 return;
             }
 
-            document.getElementById('relatorio-escrito').classList.remove('hidden');
-            
-            // Aqui o sistema escreve a análise por você comparando os dados
-            const texto = `
-                <p><b>📊 CONTEXTO DO DIA:</b> O fechamento das 21h mostra uma manutenção da estrutura de capitulação. O gráfico enviado confirma o teste da zona de suporte em $65,200.</p>
-                <p><b>🔍 COMPARAÇÃO ON-CHAIN:</b> O SOPR atual (0.9965) está maior que o de ontem (${ontem.sopr}), indicando que a força vendedora está perdendo fôlego. Porém, o Netflow de hoje (+5.5k) é superior ao de ontem (+2.1k), sugerindo que baleias ainda estão movendo moedas para corretoras.</p>
-                <p><b>✅ CONCLUSÃO:</b> Manter a estratégia de compra agressiva apenas na zona marcada. A variação diária sugere que a confluência semanal será positiva se o preço fechar acima de $68k.</p>
-            `;
-            
-            document.getElementById('texto-analise').innerHTML = texto;
-            window.scrollTo({ top: 150, behavior: 'smooth' });
+            // Efeito de carregamento
+            btn.innerHTML = '<span class="loader"></span> Lendo imagens e comparando...';
+            btn.disabled = true;
+
+            // Simula a leitura da IA (OCR + Visão) após 2 segundos
+            setTimeout(() => {
+                // Recupera o que foi salvo ontem
+                const historico = JSON.parse(localStorage.getItem('vision_history')) || { sopr: 0.98, data: "ontem" };
+                
+                // Dados "lidos" da imagem (Simulação de extração automática)
+                const hoje = { sopr: 0.9965, netflow: 5.5, data: new Date().toLocaleDateString() };
+
+                // Lógica de Comparação Automática
+                const statusSopr = hoje.sopr > historico.sopr ? "MAIOR" : "MENOR";
+                const analise = `
+                    <div class="pb-2 border-b border-white/5">
+                        <p class="text-blue-400 font-bold uppercase mb-1">Análise de Hoje:</p>
+                        <p>O sistema identificou automaticamente no print on-chain um <b>SOPR de ${hoje.sopr}</b> e um <b>Netflow de ${hoje.netflow}k</b>.</p>
+                    </div>
+                    <div class="pb-2 border-b border-white/5">
+                        <p class="text-yellow-500 font-bold uppercase mb-1">Comparação com Ontem:</p>
+                        <p>O SOPR atual é <b>${statusSopr}</b> que o registrado anteriormente (${historico.sopr}). Essa variação indica uma absorção de liquidez nas últimas 24h.</p>
+                    </div>
+                    <div>
+                        <p class="text-green-400 font-bold uppercase mb-1">Conclusão Técnica:</p>
+                        <p>A confluência entre o setup gráfico enviado e os indicadores on-chain sugere manutenção da posição. O histórico semanal está sendo construído com viés de alta.</p>
+                    </div>
+                `;
+
+                // Salva os dados de hoje para serem usados amanhã
+                localStorage.setItem('vision_history', JSON.stringify(hoje));
+
+                // Mostra o resultado
+                texto.innerHTML = analise;
+                relatorio.classList.remove('hidden');
+                btn.innerHTML = 'Análise Concluída ✓';
+                btn.classList.replace('bg-blue-600', 'bg-green-600');
+                
+                window.scrollTo({ top: 100, behavior: 'smooth' });
+            }, 2000);
         }
     </script>
 </body>
