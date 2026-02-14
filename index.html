@@ -498,10 +498,10 @@
         // Iniciar
         connect();
     <script>
-    const WS_URL = 'wss://cryptoquant-pro-production.up.railway.app';
-    
-    let ws = null;
-    let images = [null, null];
+    const WS_URL = window.location.origin.replace(/^http/, 'ws');
+let ws = null;
+let images = [null, null];
+
     
 </body>
 </html>
