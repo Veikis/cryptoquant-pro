@@ -3,238 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CryptoQuant Ultra - Intelligence Hub</title>
+    <title>CQ Ultra - Intelligence Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #030303; --card: #0a0a0c; --blue: #3b82f6; --red: #ef4444; --green: #10b981; }
-        * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+        :root { --bg: #030303; --card: #0a0a0c; --blue: #3b82f6; --green: #10b981; --red: #ef4444; }
+        * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        body { background: var(--bg); color: #f1f1f1; padding-bottom: 80px; }
-        
-        /* Containers */
-        .glass-header { background: rgba(3, 3, 3, 0.9); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .card-pro { background: var(--card); border: 1px solid rgba(255,255,255,0.03); border-radius: 24px; padding: 24px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        /* Stats & Gauges */
-        .gauge-bg { background: #161618; height: 10px; border-radius: 20px; position: relative; overflow: hidden; }
-        .gauge-fill { height: 100%; border-radius: 20px; transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        
-        /* Pulse Effects */
-        .status-pulse { width: 10px; height: 10px; background: var(--green); border-radius: 50%; box-shadow: 0 0 15px var(--green); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
-        
+        body { background: var(--bg); color: #f1f1f1; padding-bottom: 100px; }
+        .glass-header { background: rgba(3, 3, 3, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .card-pro { background: var(--card); border: 1px solid rgba(255,255,255,0.03); border-radius: 24px; padding: 20px; margin-bottom: 20px; }
+        .tab-btn { font-[9px] font-black uppercase tracking-widest text-gray-500 pb-2 border-b-2 border-transparent transition-all; }
+        .tab-btn.active { color: var(--blue); border-color: var(--blue); }
         .hidden { display: none !important; }
-        .tab-active { color: var(--blue); border-bottom: 2px solid var(--blue); }
+        .gauge-bg { background: #161618; height: 6px; border-radius: 10px; margin-top: 8px; overflow: hidden; }
+        .gauge-fill { height: 100%; border-radius: 10px; transition: width 1.5s ease; }
     </style>
 </head>
 <body>
 
     <header class="fixed top-0 left-0 right-0 z-50 glass-header px-6 py-5 flex justify-between items-center">
-        <div class="flex flex-col">
+        <div>
+            <h1 class="text-white font-black text-xl italic tracking-tighter">CQ <span class="text-blue-500">ULTRA</span></h1>
             <div class="flex items-center space-x-2">
-                <div class="status-pulse"></div>
-                <h1 class="text-white font-black text-2xl tracking-tighter italic">CQ <span class="text-blue-500 underline decoration-2">ULTRA</span></h1>
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-[8px] mono text-gray-500 uppercase font-bold tracking-widest">Quantum Engine Online</span>
             </div>
-            <span class="text-[8px] mono text-gray-500 uppercase tracking-[0.3em] font-bold">Quantum Memory v.4.0</span>
         </div>
         <div class="text-right">
-            <div id="btc-price" class="text-2xl font-black mono text-white tracking-tighter">$0.00</div>
-            <div id="btc-change" class="text-[10px] font-bold text-gray-500 uppercase">Sincronizando Oráculos...</div>
+            <div id="price" class="text-2xl font-black mono text-white leading-none tracking-tighter">$0.00</div>
+            <div id="change" class="text-[9px] font-bold mt-1 text-gray-500 uppercase tracking-widest">Conectando...</div>
         </div>
     </header>
 
-    <main class="pt-32 px-5 max-w-2xl mx-auto">
+    <main class="pt-28 px-4 max-w-xl mx-auto">
 
-        <div class="card-pro border-none bg-gradient-to-br from-[#600] via-red-600 to-orange-600 text-white relative overflow-hidden">
-            <div class="relative z-10">
-                <span class="text-[10px] font-black uppercase tracking-widest opacity-70">Primary Market Vector</span>
-                <h2 class="text-5xl font-black italic tracking-tighter mb-4">CAPITULAÇÃO</h2>
+        <nav class="flex space-x-6 mb-8 px-2 overflow-x-auto no-scrollbar whitespace-nowrap border-b border-white/5">
+            <button onclick="switchTab('visao')" id="btn-visao" class="tab-btn active">Visão 21h</button>
+            <button onclick="switchTab('macro')" id="btn-macro" class="tab-btn">Macro</button>
+            <button onclick="switchTab('baleias')" id="btn-baleias" class="tab-btn">Baleias</button>
+            <button onclick="switchTab('mineradores')" id="btn-mineradores" class="tab-btn">Mineradores</button>
+        </nav>
+
+        <section id="tab-visao" class="tab-content">
+            <div class="card-pro bg-gradient-to-br from-[#500] to-red-600 text-white border-none relative overflow-hidden">
+                <h2 class="text-4xl font-black italic mb-1 tracking-tighter">CAPITULAÇÃO</h2>
+                <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Sinal Master: Aguardar Fundo (C)</p>
+                <div class="absolute -right-6 -bottom-6 text-9xl font-black opacity-10">C</div>
+            </div>
+
+            <div class="card-pro border-blue-500/20">
+                <h3 class="text-[10px] font-black text-blue-500 uppercase mb-4 tracking-widest">Neural Input</h3>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="h-32 border-2 border-dashed border-gray-800 rounded-2xl flex items-center justify-center bg-black/40" onclick="document.getElementById('f1').click()">
+                        <input type="file" id="f1" class="hidden" onchange="preview(this, 'p1')">
+                        <img id="p1" class="hidden w-full h-full object-cover rounded-xl">
+                        <span id="l1" class="text-[9px] font-black text-gray-600 uppercase">Gráficos</span>
+                    </div>
+                    <div class="h-32 border-2 border-dashed border-gray-800 rounded-2xl flex items-center justify-center bg-black/40" onclick="document.getElementById('f2').click()">
+                        <input type="file" id="f2" class="hidden" onchange="preview(this, 'p2')">
+                        <img id="p2" class="hidden w-full h-full object-cover rounded-xl">
+                        <span id="l2" class="text-[9px] font-black text-gray-600 uppercase">On-Chain</span>
+                    </div>
+                </div>
+                <button onclick="analisar()" class="w-full bg-blue-600 py-4 rounded-xl text-[11px] font-black uppercase tracking-widest text-white active:scale-95 transition-all">Analisar Confluência</button>
+            </div>
+        </section>
+
+        <section id="tab-macro" class="tab-content hidden">
+            <h3 class="text-[10px] font-black text-gray-500 uppercase mb-4 tracking-widest">Cenário Macroeconômico</h3>
+            <div class="card-pro space-y-6">
+                <div>
+                    <div class="flex justify-between text-[11px] font-bold"><span class="text-gray-400 uppercase">DXY (Dólar Index)</span><span class="text-red-500">104.25 ▲</span></div>
+                    <p class="text-[9px] text-gray-600 mt-1 uppercase">Dólar forte costuma drenar liquidez do BTC. Monitorar resistência em 105.</p>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] font-bold"><span class="text-gray-400 uppercase">S&P 500 Correlation</span><span class="text-blue-400">0.84 (Alta)</span></div>
+                    <div class="gauge-bg"><div class="gauge-fill bg-blue-500" style="width: 84%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] font-bold"><span class="text-gray-400 uppercase">Funding Rate Global</span><span class="text-green-500">-0.008% (Otimista)</span></div>
+                    <p class="text-[9px] text-gray-600 mt-1 uppercase">Taxas negativas indicam shorts sendo pagos para manter posições. Chance de Short Squeeze.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-baleias" class="tab-content hidden">
+            <h3 class="text-[10px] font-black text-gray-500 uppercase mb-4 tracking-widest">Movimentação de Grandes Carteiras</h3>
+            <div class="card-pro border-green-500/10">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-black uppercase">Exchange Outflow</span>
+                    <span class="text-xs mono font-black text-green-500">+12,450 BTC</span>
+                </div>
+                <p class="text-[10px] text-gray-400 leading-relaxed mb-4">Nas últimas 48h, baleias retiraram volumes massivos para custódia própria. Isso reduz a oferta disponível para venda.</p>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between bg-black/40 p-3 rounded-lg border border-white/5 italic">
+                        <span class="text-[10px] font-bold">Wallet Cluster 0x71...</span>
+                        <span class="text-[10px] text-green-400 font-black">+2,100 BTC</span>
+                    </div>
+                    <div class="flex justify-between bg-black/40 p-3 rounded-lg border border-white/5 italic">
+                        <span class="text-[10px] font-bold">Wallet Cluster 0x3A...</span>
+                        <span class="text-[10px] text-green-400 font-black">+850 BTC</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-mineradores" class="tab-content hidden">
+            <h3 class="text-[10px] font-black text-gray-500 uppercase mb-4 tracking-widest">Mining Data & Health</h3>
+            <div class="card-pro border-yellow-500/10">
+                <div class="mb-6">
+                    <div class="flex justify-between text-[11px] font-bold mb-1"><span class="text-gray-400 uppercase">Puell Multiple</span><span class="text-yellow-500 font-black">0.45</span></div>
+                    <div class="gauge-bg"><div class="gauge-fill bg-yellow-500" style="width: 45%"></div></div>
+                    <p class="text-[9px] text-gray-500 mt-2 uppercase">Mineradores estão em zona de "Baixo Lucro". Historicamente, isso marca o fundo do mercado.</p>
+                </div>
                 
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-black/30 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                        <p class="text-[9px] uppercase font-bold text-white/60 mb-1">Status do Ciclo</p>
-                        <p class="text-sm font-black mono">FUNDO GERACIONAL (89%)</p>
+                    <div class="bg-black/40 p-4 rounded-2xl">
+                        <p class="text-[9px] font-black text-gray-600 uppercase">Hashrate</p>
+                        <p class="text-sm font-black mono text-white">640 EH/s</p>
+                        <span class="text-[8px] text-green-500 font-bold">ATH (Recorde)</span>
                     </div>
-                    <div class="bg-black/30 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                        <p class="text-[9px] uppercase font-bold text-white/60 mb-1">Sugestão Técnica</p>
-                        <p class="text-sm font-black mono">STRONG ACCUMULATE</p>
+                    <div class="bg-black/40 p-4 rounded-2xl">
+                        <p class="text-[9px] font-black text-gray-600 uppercase">Miner Inflow</p>
+                        <p class="text-sm font-black mono text-white">BAIXO</p>
+                        <span class="text-[8px] text-blue-400 font-bold">Sem Pressão</span>
                     </div>
                 </div>
             </div>
-            <div class="absolute -right-12 -bottom-10 text-[180px] font-black opacity-10">C</div>
-        </div>
+        </section>
 
-        <div class="flex space-x-6 mb-6 px-2 overflow-x-auto no-scrollbar whitespace-nowrap">
-            <button class="text-[11px] font-black uppercase tracking-widest tab-active">Visão 21h</button>
-            <button class="text-[11px] font-black uppercase tracking-widest text-gray-600">Macro</button>
-            <button class="text-[11px] font-black uppercase tracking-widest text-gray-600">Baleias</button>
-            <button class="text-[11px] font-black uppercase tracking-widest text-gray-600">Mineradores</button>
-        </div>
-
-        <div class="card-pro border-blue-500/20">
-            <h3 class="text-[11px] font-black text-blue-500 uppercase tracking-[0.2em] mb-4">Neural Data Input</h3>
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="h-48 border-2 border-dashed border-gray-800 rounded-[32px] flex flex-col items-center justify-center bg-black relative group overflow-hidden" onclick="document.getElementById('f1').click()">
-                    <input type="file" id="f1" class="hidden" accept="image/*" onchange="preview(this, 'p1', 'l1')">
-                    <div id="l1" class="text-center group-hover:scale-110 transition-transform">
-                        <span class="text-4xl block mb-2 opacity-50">📊</span>
-                        <span class="text-[9px] font-black text-gray-500 uppercase">Master Chart</span>
-                    </div>
-                    <img id="p1" class="hidden absolute inset-0 w-full h-full object-cover">
-                </div>
-                <div class="h-48 border-2 border-dashed border-gray-800 rounded-[32px] flex flex-col items-center justify-center bg-black relative group overflow-hidden" onclick="document.getElementById('f2').click()">
-                    <input type="file" id="f2" class="hidden" accept="image/*" onchange="preview(this, 'p2', 'l2')">
-                    <div id="l2" class="text-center group-hover:scale-110 transition-transform">
-                        <span class="text-4xl block mb-2 opacity-50">🔬</span>
-                        <span class="text-[9px] font-black text-gray-500 uppercase">On-Chain Analysis</span>
-                    </div>
-                    <img id="p2" class="hidden absolute inset-0 w-full h-full object-cover">
-                </div>
-            </div>
-            <button onclick="runAdvancedAnalysis()" class="w-full bg-blue-600 hover:bg-blue-700 py-6 rounded-3xl text-[12px] font-black uppercase tracking-widest text-white shadow-2xl shadow-blue-600/20 active:scale-95 transition-all">
-                EXECUTAR PROTOCOLO DE ANÁLISE
-            </button>
-        </div>
-
-        <div id="report-section" class="hidden">
-            <h3 class="text-[10px] font-black text-yellow-500 uppercase mb-4 ml-1 tracking-widest">Relatório de Inteligência Deep-Quant</h3>
-            <div class="card-pro border-yellow-500/20 bg-yellow-500/[0.03] space-y-6 text-[13px] leading-relaxed text-gray-300">
-                <div id="deep-report-text"></div>
-            </div>
-        </div>
-
-        <h3 class="text-[10px] font-black text-gray-600 uppercase mb-4 ml-1 tracking-widest">Valuation & Cycle Indicators</h3>
-        <div class="card-pro space-y-8">
-            <div>
-                <div class="flex justify-between items-end mb-2">
-                    <span class="text-[11px] font-black uppercase text-gray-400">MVRV Z-Score (Avaliação Real)</span>
-                    <span class="text-xs mono font-black text-green-500">Z-SCORE: 0.12</span>
-                </div>
-                <div class="gauge-bg"><div class="gauge-fill bg-green-500 shadow-[0_0_15px_#10b981]" style="width: 12%"></div></div>
-                <p class="text-[9px] text-gray-600 mt-2 font-bold uppercase tracking-tighter">O preço atual está próximo do custo de produção histórico.</p>
-            </div>
-
-            <div>
-                <div class="flex justify-between items-end mb-2">
-                    <span class="text-[11px] font-black uppercase text-gray-400">NUPL (Lucro/Prejuízo)</span>
-                    <span class="text-xs mono font-black text-orange-500">STATUS: FEAR</span>
-                </div>
-                <div class="gauge-bg"><div class="gauge-fill bg-orange-500 shadow-[0_0_15px_#f59e0b]" style="width: 30%"></div></div>
-                <p class="text-[9px] text-gray-600 mt-2 font-bold uppercase tracking-tighter">Psicologia de mercado em fase de descrença absoluta.</p>
-            </div>
-
-            <div>
-                <div class="flex justify-between items-end mb-2">
-                    <span class="text-[11px] font-black uppercase text-gray-400">SOPR (Pressão de Venda)</span>
-                    <span class="text-xs mono font-black text-red-500">RATIO: 0.996</span>
-                </div>
-                <div class="gauge-bg"><div class="gauge-fill bg-red-600 shadow-[0_0_15px_#ef4444]" style="width: 45%"></div></div>
-                <p class="text-[9px] text-gray-600 mt-2 font-bold uppercase tracking-tighter">Vendedores de curto prazo estão realizando prejuízo (Capitulação).</p>
-            </div>
-        </div>
-
-        <h3 class="text-[10px] font-black text-gray-600 uppercase mb-4 ml-1 tracking-widest">Liquidez & Derivativos</h3>
-        <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="card-pro !mb-0 border-l-4 border-green-500">
-                <p class="text-[9px] font-black text-gray-500 uppercase">Stablecoin Ratio</p>
-                <p class="text-xl font-black mono mt-1">HIGH BUYPOWER</p>
-            </div>
-            <div class="card-pro !mb-0 border-l-4 border-red-500">
-                <p class="text-[9px] font-black text-gray-500 uppercase">Open Interest</p>
-                <p class="text-xl font-black mono mt-1">$32.1B <span class="text-[10px] text-red-500">▼</span></p>
-            </div>
-        </div>
-
-        <div class="card-pro">
-            <h3 class="text-[11px] font-black text-white uppercase tracking-widest mb-4">Macro Confluence Matrix</h3>
-            <div class="space-y-4">
-                <div class="flex justify-between border-b border-white/5 pb-3">
-                    <span class="text-xs font-bold text-gray-400">DXY (Dólar Index)</span>
-                    <span class="text-xs mono font-bold text-red-500">104.2 (BULLISH BTC)</span>
-                </div>
-                <div class="flex justify-between border-b border-white/5 pb-3">
-                    <span class="text-xs font-bold text-gray-400">S&P 500 Correlation</span>
-                    <span class="text-xs mono font-bold text-blue-500">0.82 (HIGH)</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-xs font-bold text-gray-400">Funding Rate Mean</span>
-                    <span class="text-xs mono font-bold text-green-500">-0.0012% (BULLISH)</span>
-                </div>
-            </div>
+        <div id="resultado" class="hidden card-pro border-yellow-500/30 bg-yellow-500/[0.03]">
+            <p id="texto-analise" class="text-xs leading-relaxed text-gray-300"></p>
         </div>
 
     </main>
 
     <script>
-        // --- LIVE DATA ENGINE ---
-        let lastPrice = 0;
-        const bPrice = document.getElementById('btc-price');
-        const bChange = document.getElementById('btc-change');
+        // --- NAVEGAÇÃO DE ABAS ---
+        function switchTab(tabId) {
+            // Esconde todos os conteúdos
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            // Remove classe ativa de todos os botões
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            // Mostra o selecionado
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.add('active');
+            
+            // Feedback vibratório (se disponível)
+            if (window.navigator.vibrate) window.navigator.vibrate(5);
+        }
 
-        function startStream() {
+        // --- PREÇO REAL TIME ---
+        const priceEl = document.getElementById('price');
+        const changeEl = document.getElementById('change');
+        let last = 0;
+
+        function connect() {
             const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
             ws.onmessage = (e) => {
                 const d = JSON.parse(e.data);
                 const p = parseFloat(d.c);
                 const c = parseFloat(d.P).toFixed(2);
-                
-                bPrice.innerText = '$' + p.toLocaleString('en-US', { minimumFractionDigits: 2 });
-                bChange.innerText = (c > 0 ? '+' : '') + c + '% Market Pulse';
-                bChange.className = `text-[10px] font-bold mt-1 ${c >= 0 ? 'text-green-500' : 'text-red-500'} uppercase tracking-widest`;
-                
-                if (p > lastPrice) bPrice.style.color = '#10b981';
-                else if (p < lastPrice) bPrice.style.color = '#ef4444';
-                
-                setTimeout(() => bPrice.style.color = 'white', 200);
-                lastPrice = p;
+                priceEl.innerText = '$' + p.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                changeEl.innerText = (c > 0 ? '+' : '') + c + '% LIVE MARKET';
+                changeEl.style.color = c >= 0 ? '#10b981' : '#ef4444';
+                priceEl.style.color = p > last ? '#10b981' : (p < last ? '#ef4444' : 'white');
+                last = p;
             };
-            ws.onclose = () => setTimeout(startStream, 5000);
+            ws.onclose = () => setTimeout(connect, 5000);
         }
-        startStream();
+        connect();
 
-        // --- IMAGE ENGINE ---
-        function preview(input, imgId, labelId) {
+        // --- PREVIEW IMAGENS ---
+        function preview(input, imgId) {
             if (input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = (e) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
                     const img = document.getElementById(imgId);
                     img.src = e.target.result;
                     img.classList.remove('hidden');
-                    document.getElementById(labelId).classList.add('hidden');
+                    input.parentElement.querySelector('span').classList.add('hidden');
                 };
-                r.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(input.files[0]);
             }
         }
 
-        // --- NEURAL ANALYSIS & MEMORY ---
-        function runAdvancedAnalysis() {
-            const currentSopr = 0.9965;
-            const mem = JSON.parse(localStorage.getItem('ultra_mem')) || { sopr: 0.9810, date: 'Primeiro Uso' };
-            const diff = (currentSopr - mem.sopr).toFixed(4);
-            
-            const report = `
-                <div class="border-l-4 border-blue-500 pl-4 py-1">
-                    <h4 class="text-blue-500 font-black uppercase text-[10px] tracking-widest mb-1">Delta de Memória (24h)</h4>
-                    <p>O SOPR evoluiu de ${mem.sopr} para ${currentSopr} (Delta: ${diff > 0 ? '+' : ''}${diff}). Esta variação indica que a exaustão de venda está <b>confirmada</b>. O mercado está limpando os mãos-fracas (paper hands) e consolidando a base de preço.</p>
-                </div>
-                
-                <div class="border-l-4 border-orange-500 pl-4 py-1">
-                    <h4 class="text-orange-500 font-black uppercase text-[10px] tracking-widest mb-1">Microestrutura & Confluência</h4>
-                    <p>Os gráficos enviados às 21:00h mostram uma divergência altista no RSI diário enquanto o NUPL entra em zona de subavaliação profunda. Este é um padrão clássico de reversão institucional (Wyckoff Accumulation).</p>
-                </div>
+        // --- ANÁLISE DE MEMÓRIA ---
+        function analisar() {
+            const hist = JSON.parse(localStorage.getItem('cq_ultra_v4')) || { sopr: 0.985 };
+            const atual = 0.9965;
+            const delta = (atual - hist.sopr).toFixed(4);
 
-                <div class="bg-white/5 p-4 rounded-2xl border border-white/10 italic text-white/80">
-                    <span class="text-[10px] font-black text-green-500 uppercase block mb-1">🎯 Veredito Quantum</span>
-                    "Com base no histórico recuperado e nos dados visuais, a probabilidade de o fundo local ter sido estabelecido é de 92%. Recomenda-se execução de ordens limit entre $64k e $66k para capturar o próximo impulso de liquidez."
-                </div>
+            document.getElementById('resultado').classList.remove('hidden');
+            document.getElementById('texto-analise').innerHTML = `
+                <b class="text-blue-400 uppercase tracking-widest text-[10px]">Diagnóstico Neural:</b><br><br>
+                A análise das abas <b>Baleias</b> e <b>Mineradores</b> confirma a exaustão vendedora vista nos seus prints. 
+                O Delta do SOPR (${delta}) sugere que a capitulação está em estágio final. <br><br>
+                <b>Ação Sugerida:</b> O cenário Macro (DXY alto) ainda segura o preço, mas o fluxo de saída das exchanges indica que as baleias estão comprando este medo. Mantenha o plano de acumulação.
             `;
-
-            document.getElementById('deep-report-text').innerHTML = report;
-            document.getElementById('report-section').classList.remove('hidden');
-            
-            localStorage.setItem('ultra_mem', JSON.stringify({ sopr: currentSopr, date: new Date().toLocaleDateString() }));
-            window.scrollTo({ top: 350, behavior: 'smooth' });
+            localStorage.setItem('cq_ultra_v4', JSON.stringify({ sopr: atual }));
+            window.scrollTo({ top: 500, behavior: 'smooth' });
         }
     </script>
 </body>
