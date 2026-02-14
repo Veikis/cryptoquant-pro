@@ -114,8 +114,12 @@ app.get('/', (req, res) => {
 // Iniciar simulação
 simulateRealTimeData();
 
+// O Railway injeta a porta correta automaticamente aqui
 const PORT = process.env.PORT || 8080;
 
+// IMPORTANTE: Remova o '0.0.0.0' se ele estiver causando erro, 
+// ou mantenha apenas assim para aceitar a porta dinâmica:
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor online na porta ${PORT}`);
+    console.log('Dados em tempo real: ATIVOS');
 });
