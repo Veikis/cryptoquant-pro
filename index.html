@@ -11,27 +11,16 @@
         * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         body { background: var(--bg); color: #f1f1f1; padding-bottom: 60px; overflow-x: hidden; }
-        
-        /* Glassmorphism Header */
         .glass-header { background: rgba(2, 2, 2, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.08); }
-        
-        /* Cards Estilizados */
         .card-pro { background: var(--card); border: 1px solid rgba(255,255,255,0.04); border-radius: 24px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        
-        /* Barra de Fases */
         .phase-indicator { background: #161618; height: 45px; border-radius: 14px; display: flex; align-items: center; padding: 4px; border: 1px solid rgba(255,255,255,0.05); gap: 4px; }
         .phase-step { flex: 1; text-align: center; font-size: 8px; font-weight: 900; text-transform: uppercase; color: #444; display: flex; align-items: center; justify-content: center; height: 100%; border-radius: 10px; transition: 0.5s; }
         .phase-active { background: var(--red); color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-        
-        /* Tabs */
         .tab-btn { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #555; padding: 10px 4px; border-bottom: 2px solid transparent; transition: 0.3s; }
         .tab-btn.active { color: var(--blue); border-color: var(--blue); }
-        
         .hidden { display: none !important; }
         .gauge-bg { background: #1a1a1c; height: 8px; border-radius: 10px; overflow: hidden; margin-top: 8px; }
         .gauge-fill { height: 100%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
@@ -65,7 +54,6 @@
                 <div class="phase-step">Queda</div>
                 <div class="phase-step phase-active">Capitulação</div>
             </div>
-            <p class="text-[9px] text-gray-600 mt-3 italic text-center uppercase font-bold tracking-tight">Oportunidade de fundo geracional detectada nas métricas on-chain.</p>
         </div>
 
         <nav class="flex space-x-6 mb-8 px-2 overflow-x-auto no-scrollbar border-b border-white/5">
@@ -78,20 +66,40 @@
         <section id="tab-terminal" class="tab-content">
             <div class="card-pro border-blue-500/20">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-[11px] font-black text-blue-400 uppercase">Entrada de Dados 21:00h</h3>
+                    <h3 class="text-[11px] font-black text-blue-400 uppercase">Entrada de Dados</h3>
                     <div id="sync-status" class="text-[8px] mono px-2 py-1 bg-gray-800 rounded text-gray-400 uppercase">Vazio</div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative group overflow-hidden" onclick="document.getElementById('f1').click()">
-                        <input type="file" id="f1" class="hidden" onchange="handleFileChange(this, 'p1', 'l1', 'chart')">
-                        <img id="p1" class="hidden absolute inset-0 w-full h-full object-cover">
-                        <span id="l1" class="text-[10px] font-black text-gray-600 group-hover:text-blue-500 transition-colors uppercase">Gráficos</span>
+                    <div class="space-y-3">
+                        <div class="h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative group overflow-hidden" onclick="document.getElementById('f1').click()">
+                            <input type="file" id="f1" class="hidden" onchange="handleFileChange(this, 'p1', 'l1', 'chart')">
+                            <img id="p1" class="hidden absolute inset-0 w-full h-full object-cover">
+                            <span id="l1" class="text-[10px] font-black text-gray-600 uppercase">Gráficos</span>
+                        </div>
+                        <div id="termos-box" class="hidden space-y-2 px-1">
+                            <div>
+                                <div class="flex justify-between text-[7px] font-black text-gray-500 uppercase"><span>SOPR</span><span class="text-red-500">95%</span></div>
+                                <div class="gauge-bg !mt-1"><div class="gauge-fill bg-red-500" style="width: 95%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[7px] font-black text-gray-500 uppercase"><span>Netflow</span><span class="text-green-500">35%</span></div>
+                                <div class="gauge-bg !mt-1"><div class="gauge-fill bg-green-500" style="width: 35%"></div></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative group overflow-hidden" onclick="document.getElementById('f2').click()">
-                        <input type="file" id="f2" class="hidden" onchange="handleFileChange(this, 'p2', 'l2', 'onchain')">
-                        <img id="p2" class="hidden absolute inset-0 w-full h-full object-cover">
-                        <span id="l2" class="text-[10px] font-black text-gray-600 group-hover:text-blue-500 transition-colors uppercase">On-Chain</span>
+
+                    <div class="space-y-3">
+                        <div class="h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative group overflow-hidden" onclick="document.getElementById('f2').click()">
+                            <input type="file" id="f2" class="hidden" onchange="handleFileChange(this, 'p2', 'l2', 'onchain')">
+                            <img id="p2" class="hidden absolute inset-0 w-full h-full object-cover">
+                            <span id="l2" class="text-[10px] font-black text-gray-600 uppercase">On-Chain</span>
+                        </div>
+                        <div id="anos-box" class="hidden flex flex-wrap gap-1">
+                            <button onclick="definirMemoria('2015')" class="flex-1 bg-gray-800 py-2 rounded-lg text-[8px] font-black hover:bg-blue-600 transition uppercase">2015</button>
+                            <button onclick="definirMemoria('2018')" class="flex-1 bg-gray-800 py-2 rounded-lg text-[8px] font-black hover:bg-blue-600 transition uppercase">2018</button>
+                            <button onclick="definirMemoria('2020')" class="flex-1 bg-gray-800 py-2 rounded-lg text-[8px] font-black hover:bg-blue-600 transition uppercase">2020</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -107,18 +115,9 @@
         <section id="tab-detalhes" class="tab-content hidden">
             <div class="card-pro space-y-8">
                 <h3 class="text-[11px] font-black text-blue-400 uppercase tracking-widest border-b border-white/5 pb-2">Enciclopédia On-Chain</h3>
-                
                 <div>
                     <h4 class="text-xs font-black text-white uppercase mb-1">SOPR (Taxa de Lucro Gastos)</h4>
-                    <p class="text-[11px] text-gray-500 leading-relaxed">Mede se o mercado está vendendo com lucro ou prejuízo. <b>Abaixo de 1.0</b> (como na sua foto) significa que as pessoas estão aceitando perder dinheiro por medo. Isso é o sinal clássico de fundo.</p>
-                </div>
-                <div>
-                    <h4 class="text-xs font-black text-white uppercase mb-1">Netflow das Exchanges</h4>
-                    <p class="text-[11px] text-gray-500 leading-relaxed">Mostra o fluxo de entrada e saída de BTC nas corretoras. Quando as linhas diminuem (exaustão), significa que não há mais pressão vendedora ativa.</p>
-                </div>
-                <div>
-                    <h4 class="text-xs font-black text-white uppercase mb-1">Funding Rates</h4>
-                    <p class="text-[11px] text-gray-500 leading-relaxed">Taxas pagas entre traders de futuros. Valores negativos indicam pessimismo extremo, o que geralmente serve de combustível para altas rápidas (Short Squeeze).</p>
+                    <p class="text-[11px] text-gray-500 leading-relaxed">Mede se o mercado está vendendo com lucro ou prejuízo. Abaixo de 1.0 significa capitulação.</p>
                 </div>
             </div>
         </section>
@@ -132,11 +131,6 @@
                         <span class="text-lg font-black mono text-yellow-500">0.48</span>
                     </div>
                     <div class="gauge-bg"><div class="gauge-fill bg-yellow-500" style="width: 48%"></div></div>
-                    <p class="text-[10px] text-gray-500 mt-3 uppercase font-medium">Zona de Estresse Máximo: Mineradores estão operando no prejuízo. Historicamente, isso marca o fundo do poço do ciclo.</p>
-                </div>
-                <div class="bg-black/50 p-4 rounded-xl border border-white/5">
-                    <p class="text-[10px] font-black text-blue-400 uppercase mb-2 italic">Análise de Hashrate</p>
-                    <p class="text-[11px] text-gray-400">Mesmo com preço baixo, o Hashrate continua em máxima histórica. A rede está mais segura do que nunca, indicando confiança institucional de longo prazo.</p>
                 </div>
             </div>
         </section>
@@ -145,12 +139,8 @@
             <div class="card-pro space-y-6">
                 <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Memória de Ciclos</h3>
                 <div class="border-l-2 border-blue-500 pl-4">
-                    <h4 class="text-xs font-black text-white uppercase">Analogia 2018 (Capitulação)</h4>
-                    <p class="text-[11px] text-gray-500 mt-1 italic">O cenário atual é idêntico ao fim de 2018. Volume de venda "secando" em níveis baixos, preparando o terreno para uma reversão lenta e sólida.</p>
-                </div>
-                <div class="border-l-2 border-green-500 pl-4">
-                    <h4 class="text-xs font-black text-white uppercase">Tendência 2020 (V-Shape)</h4>
-                    <p class="text-[11px] text-gray-500 mt-1 italic">Diferente de 2018, em 2020 a recuperação foi rápida. O que decidirá agora é a velocidade com que as baleias retirarem o BTC das exchanges (Netflow Negativo).</p>
+                    <h4 class="text-xs font-black text-white uppercase">Analogia 2018</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 italic">Volume de venda secando em níveis baixos.</p>
                 </div>
             </div>
         </section>
@@ -158,14 +148,17 @@
     </main>
 
     <script>
-        // --- SISTEMA DE HASH (IDENTIFICAÇÃO DE FOTOS IGUAIS) ---
         let hashes = { chart: null, onchain: null };
+        const memorias = {
+            '2015': 'Fundo geracional caracterizado por exaustão extrema. O volume "seca" antes da reversão.',
+            '2018': 'Capitulação final. O varejo desiste e o SOPR abaixo de 1.0 marca o melhor ponto de entrada.',
+            '2020': 'Recuperação agressiva. Saída massiva de moedas das exchanges indica choque de oferta iminente.'
+        };
 
         function handleFileChange(input, imgId, labelId, type) {
             if (input.files && input.files[0]) {
                 const f = input.files[0];
                 hashes[type] = `${f.name}-${f.size}-${f.lastModified}`;
-                
                 const r = new FileReader();
                 r.onload = (e) => {
                     document.getElementById(imgId).src = e.target.result;
@@ -173,9 +166,21 @@
                     document.getElementById(labelId).classList.add('hidden');
                     document.getElementById('sync-status').innerText = "Carregado";
                     document.getElementById('sync-status').classList.replace('bg-gray-800', 'bg-blue-900');
+                    if(type === 'chart') document.getElementById('termos-box').classList.remove('hidden');
+                    if(type === 'onchain') document.getElementById('anos-box').classList.remove('hidden');
                 };
                 r.readAsDataURL(f);
             }
+        }
+
+        function definirMemoria(ano) {
+            const box = document.getElementById('res-box');
+            const header = document.getElementById('res-header');
+            const body = document.getElementById('res-body');
+            box.classList.remove('hidden');
+            header.innerHTML = `<span class="text-blue-400 font-black text-[9px] uppercase italic">● Analogia de Ciclo: ${ano}</span>`;
+            body.innerHTML = `<p class="text-gray-400 italic font-medium">"${memorias[ano]}"</p>`;
+            window.scrollTo({ top: 500, behavior: 'smooth' });
         }
 
         function analisarVariação() {
@@ -183,24 +188,18 @@
             const box = document.getElementById('res-box');
             const header = document.getElementById('res-header');
             const body = document.getElementById('res-body');
-
             box.classList.remove('hidden');
 
             if (hashes.chart === mem.chart && hashes.onchain === mem.onchain && hashes.chart !== null) {
                 header.innerHTML = `<span class="text-gray-500 font-black text-[9px] uppercase italic">● Dados Idênticos Detectados</span>`;
-                body.innerHTML = `<p class="text-gray-500 italic">O sistema reconheceu estas imagens. Não houve variação nos pixels ou metadados. O cenário de <b>Capitulação</b> permanece estável conforme a última leitura. Aguarde novas movimentações on-chain.</p>`;
+                body.innerHTML = `<p class="text-gray-500 italic">O sistema reconheceu estas imagens. Não houve variação real.</p>`;
             } else {
-                header.innerHTML = `<span class="text-green-500 font-black text-[9px] uppercase">● Nova Variação Detectada - Processando Inteligência</span>`;
-                body.innerHTML = `
-                    <p><b class="text-blue-400">Diagnóstico Técnico:</b> A mudança nos dados sugere que a exaustão vendedora está se consolidando. As "linhas curtas" nos indicadores on-chain confirmam o fim do pânico e o início da absorção.</p>
-                    <p><b class="text-yellow-500">Confluência:</b> Com o Puell Multiple em 0.48 e o SOPR abaixo de 1.0, o risco-recompensa para compras spot é o melhor dos últimos 12 meses.</p>
-                `;
+                header.innerHTML = `<span class="text-green-500 font-black text-[9px] uppercase">● Nova Variação Detectada</span>`;
+                body.innerHTML = `<p class="text-blue-400 font-bold">Nova leitura processada. Selecione um ano acima para comparar.</p>`;
                 localStorage.setItem('cq_master_v7', JSON.stringify(hashes));
             }
-            window.scrollTo({ top: 500, behavior: 'smooth' });
         }
 
-        // --- NAVEGAÇÃO ---
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -208,7 +207,6 @@
             document.getElementById('btn-' + id).classList.add('active');
         }
 
-        // --- PREÇO REAL ---
         let lastP = 0;
         function connect() {
             const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
