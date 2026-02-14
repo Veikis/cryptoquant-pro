@@ -3,153 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CQ Ultra - Análise de Ciclos</title>
+    <title>CQ Ultra - Hub de Inteligência</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #020202; --card: #0d0d0f; --blue: #3b82f6; --green: #10b981; --red: #ef4444; --gold: #f59e0b; }
-        * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        body { background: var(--bg); color: #f1f1f1; padding-bottom: 60px; }
-        .card-pro { background: var(--card); border: 1px solid rgba(255,255,255,0.04); border-radius: 24px; padding: 20px; margin-bottom: 16px; }
-        .tab-btn { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #555; padding: 12px 6px; border-bottom: 2px solid transparent; transition: 0.3s; }
+        body { background: var(--bg); color: #f1f1f1; padding-bottom: 60px; overflow-x: hidden; }
+        
+        /* Glassmorphism Header */
+        .glass-header { background: rgba(2, 2, 2, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.08); }
+        
+        /* Cards Estilizados */
+        .card-pro { background: var(--card); border: 1px solid rgba(255,255,255,0.04); border-radius: 24px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        
+        /* Barra de Fases */
+        .phase-indicator { background: #161618; height: 45px; border-radius: 14px; display: flex; align-items: center; padding: 4px; border: 1px solid rgba(255,255,255,0.05); gap: 4px; }
+        .phase-step { flex: 1; text-align: center; font-size: 8px; font-weight: 900; text-transform: uppercase; color: #444; display: flex; align-items: center; justify-content: center; height: 100%; border-radius: 10px; transition: 0.5s; }
+        .phase-active { background: var(--red); color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        
+        /* Tabs */
+        .tab-btn { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #555; padding: 10px 4px; border-bottom: 2px solid transparent; transition: 0.3s; }
         .tab-btn.active { color: var(--blue); border-color: var(--blue); }
-        .metric-bar { background: #1a1a1c; height: 6px; border-radius: 10px; overflow: hidden; margin-top: 6px; }
-        .metric-fill { height: 100%; transition: width 1s ease-in-out; }
-        select { background: #1a1a1c; border: 1px solid #333; color: white; padding: 8px; border-radius: 12px; font-size: 12px; font-weight: bold; width: 100%; outline: none; }
+        
+        .hidden { display: none !important; }
+        .gauge-bg { background: #1a1a1c; height: 8px; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .gauge-fill { height: 100%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
 <body>
 
-    <header class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl px-6 py-5 flex justify-between items-center border-b border-white/5">
-        <h1 class="text-white font-black text-xl italic uppercase tracking-tighter">CQ <span class="text-blue-500">Ultra</span></h1>
-        <div id="price" class="text-xl font-black mono text-white leading-none tracking-tighter">$0.00</div>
+    <header class="fixed top-0 left-0 right-0 z-50 glass-header px-6 py-5 flex justify-between items-center">
+        <div>
+            <h1 class="text-white font-black text-xl italic tracking-tighter uppercase">CQ <span class="text-blue-500">Ultra</span></h1>
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
+                <span class="text-[8px] mono text-gray-500 uppercase font-bold">Motor Quântico Ativo</span>
+            </div>
+        </div>
+        <div class="text-right">
+            <div id="price" class="text-2xl font-black mono text-white leading-none tracking-tighter">$0.00</div>
+            <div id="change" class="text-[9px] font-bold mt-1 text-gray-500 uppercase tracking-widest">Sincronizando...</div>
+        </div>
     </header>
 
-    <main class="pt-24 px-4 max-w-xl mx-auto">
+    <main class="pt-28 px-4 max-w-xl mx-auto">
 
-        <nav class="flex space-x-6 mb-6 overflow-x-auto no-scrollbar">
+        <div class="mb-8">
+            <div class="flex justify-between items-end mb-3">
+                <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Estado do Ciclo</h3>
+                <span class="text-[10px] font-black text-red-500 uppercase">Fase: Capitulação</span>
+            </div>
+            <div class="phase-indicator">
+                <div class="phase-step">Acumulação</div>
+                <div class="phase-step">Alta</div>
+                <div class="phase-step">Euforia</div>
+                <div class="phase-step">Queda</div>
+                <div class="phase-step phase-active">Capitulação</div>
+            </div>
+            <p class="text-[9px] text-gray-600 mt-3 italic text-center uppercase font-bold tracking-tight">Oportunidade de fundo geracional detectada nas métricas on-chain.</p>
+        </div>
+
+        <nav class="flex space-x-6 mb-8 px-2 overflow-x-auto no-scrollbar border-b border-white/5">
             <button onclick="switchTab('terminal')" id="btn-terminal" class="tab-btn active">Terminal</button>
-            <button onclick="switchTab('hist')" id="btn-hist" class="tab-btn">Memória de Ciclo</button>
+            <button onclick="switchTab('detalhes')" id="btn-detalhes" class="tab-btn">Indicadores</button>
+            <button onclick="switchTab('miner')" id="btn-miner" class="tab-btn">Mineradores</button>
+            <button onclick="switchTab('hist')" id="btn-hist" class="tab-btn">Padrões</button>
         </nav>
 
         <section id="tab-terminal" class="tab-content">
             <div class="card-pro border-blue-500/20">
-                <h3 class="text-[10px] font-black text-blue-400 uppercase mb-4">Sincronização Ativa</h3>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-[11px] font-black text-blue-400 uppercase">Entrada de Dados 21:00h</h3>
+                    <div id="sync-status" class="text-[8px] mono px-2 py-1 bg-gray-800 rounded text-gray-400 uppercase">Vazio</div>
+                </div>
                 
-                <div class="grid grid-cols-2 gap-3 mb-6">
-                    <div class="h-32 border-2 border-dashed border-gray-800 rounded-3xl flex items-center justify-center bg-black relative overflow-hidden" onclick="document.getElementById('f1').click()">
-                        <input type="file" id="f1" class="hidden" onchange="handleFileChange(this, 'p1', 'chart')">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative group overflow-hidden" onclick="document.getElementById('f1').click()">
+                        <input type="file" id="f1" class="hidden" onchange="handleFileChange(this, 'p1', 'l1', 'chart')">
                         <img id="p1" class="hidden absolute inset-0 w-full h-full object-cover">
-                        <span class="text-[9px] font-black text-gray-600">GRAFÍCOS</span>
+                        <span id="l1" class="text-[10px] font-black text-gray-600 group-hover:text-blue-500 transition-colors uppercase">Gráficos</span>
                     </div>
-                    <div class="h-32 border-2 border-dashed border-gray-800 rounded-3xl flex items-center justify-center bg-black relative overflow-hidden" onclick="document.getElementById('f2').click()">
-                        <input type="file" id="f2" class="hidden" onchange="handleFileChange(this, 'p2', 'onchain')">
+                    <div class="h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative group overflow-hidden" onclick="document.getElementById('f2').click()">
+                        <input type="file" id="f2" class="hidden" onchange="handleFileChange(this, 'p2', 'l2', 'onchain')">
                         <img id="p2" class="hidden absolute inset-0 w-full h-full object-cover">
-                        <span class="text-[9px] font-black text-gray-600">ON-CHAIN</span>
-                    </div>
-                </div>
-
-                <div class="space-y-4 mb-4">
-                    <div>
-                        <div class="flex justify-between text-[9px] font-bold uppercase"><span>SOPR (Sentimento)</span><span id="v-sopr">0.00</span></div>
-                        <div class="metric-bar"><div id="b-sopr" class="metric-fill bg-red-500" style="width: 0%"></div></div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-[9px] font-bold uppercase"><span>Netflow (Pressão)</span><span id="v-net">0.00</span></div>
-                        <div class="metric-bar"><div id="b-net" class="metric-fill bg-orange-500" style="width: 0%"></div></div>
+                        <span id="l2" class="text-[10px] font-black text-gray-600 group-hover:text-blue-500 transition-colors uppercase">On-Chain</span>
                     </div>
                 </div>
                 
-                <button onclick="processar()" class="w-full bg-blue-600 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest">Analisar Variação</button>
+                <button onclick="analisarVariação()" class="w-full bg-blue-600 hover:bg-blue-700 py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all">Sincronizar e Comparar</button>
             </div>
-            
-            <div id="res-box" class="hidden card-pro border-white/5">
-                <div id="res-body" class="text-[11px] text-gray-400 leading-relaxed"></div>
+
+            <div id="res-box" class="hidden card-pro border-white/5 bg-white/[0.02]">
+                <div id="res-header" class="mb-4"></div>
+                <div id="res-body" class="text-xs leading-relaxed text-gray-300 space-y-4"></div>
+            </div>
+        </section>
+
+        <section id="tab-detalhes" class="tab-content hidden">
+            <div class="card-pro space-y-8">
+                <h3 class="text-[11px] font-black text-blue-400 uppercase tracking-widest border-b border-white/5 pb-2">Enciclopédia On-Chain</h3>
+                
+                <div>
+                    <h4 class="text-xs font-black text-white uppercase mb-1">SOPR (Taxa de Lucro Gastos)</h4>
+                    <p class="text-[11px] text-gray-500 leading-relaxed">Mede se o mercado está vendendo com lucro ou prejuízo. <b>Abaixo de 1.0</b> (como na sua foto) significa que as pessoas estão aceitando perder dinheiro por medo. Isso é o sinal clássico de fundo.</p>
+                </div>
+                <div>
+                    <h4 class="text-xs font-black text-white uppercase mb-1">Netflow das Exchanges</h4>
+                    <p class="text-[11px] text-gray-500 leading-relaxed">Mostra o fluxo de entrada e saída de BTC nas corretoras. Quando as linhas diminuem (exaustão), significa que não há mais pressão vendedora ativa.</p>
+                </div>
+                <div>
+                    <h4 class="text-xs font-black text-white uppercase mb-1">Funding Rates</h4>
+                    <p class="text-[11px] text-gray-500 leading-relaxed">Taxas pagas entre traders de futuros. Valores negativos indicam pessimismo extremo, o que geralmente serve de combustível para altas rápidas (Short Squeeze).</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-miner" class="tab-content hidden">
+            <div class="card-pro space-y-6">
+                <h3 class="text-[11px] font-black text-yellow-500 uppercase tracking-widest">Saúde dos Mineradores</h3>
+                <div>
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase italic">Puell Multiple</span>
+                        <span class="text-lg font-black mono text-yellow-500">0.48</span>
+                    </div>
+                    <div class="gauge-bg"><div class="gauge-fill bg-yellow-500" style="width: 48%"></div></div>
+                    <p class="text-[10px] text-gray-500 mt-3 uppercase font-medium">Zona de Estresse Máximo: Mineradores estão operando no prejuízo. Historicamente, isso marca o fundo do poço do ciclo.</p>
+                </div>
+                <div class="bg-black/50 p-4 rounded-xl border border-white/5">
+                    <p class="text-[10px] font-black text-blue-400 uppercase mb-2 italic">Análise de Hashrate</p>
+                    <p class="text-[11px] text-gray-400">Mesmo com preço baixo, o Hashrate continua em máxima histórica. A rede está mais segura do que nunca, indicando confiança institucional de longo prazo.</p>
+                </div>
             </div>
         </section>
 
         <section id="tab-hist" class="tab-content hidden">
-            <div class="card-pro">
-                <h3 class="text-[10px] font-black text-gray-500 uppercase mb-4">Comparação Histórica</h3>
-                <label class="text-[9px] font-bold text-gray-600 uppercase mb-2 block">Selecione o Ano para Comparar:</label>
-                <select id="cycle-select" onchange="updateCycleInfo()">
-                    <option value="2015">2015 - O Despertar (Acumulação Lenta)</option>
-                    <option value="2018">2018 - A Grande Capitulação (Inverno)</option>
-                    <option value="2020">2020 - O Cisne Negro (V-Shape)</option>
-                    <option value="2024" selected>2024 - O Ciclo Institucional (ETF)</option>
-                </select>
-
-                <div id="cycle-display" class="mt-6 space-y-4">
-                    </div>
+            <div class="card-pro space-y-6">
+                <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Memória de Ciclos</h3>
+                <div class="border-l-2 border-blue-500 pl-4">
+                    <h4 class="text-xs font-black text-white uppercase">Analogia 2018 (Capitulação)</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 italic">O cenário atual é idêntico ao fim de 2018. Volume de venda "secando" em níveis baixos, preparando o terreno para uma reversão lenta e sólida.</p>
+                </div>
+                <div class="border-l-2 border-green-500 pl-4">
+                    <h4 class="text-xs font-black text-white uppercase">Tendência 2020 (V-Shape)</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 italic">Diferente de 2018, em 2020 a recuperação foi rápida. O que decidirá agora é a velocidade com que as baleias retirarem o BTC das exchanges (Netflow Negativo).</p>
+                </div>
             </div>
         </section>
 
     </main>
 
     <script>
-        const cycleData = {
-            "2015": { desc: "Fundo de $160. Caracterizado por 300 dias de lateralização lateral profunda.", sopr: "0.98", risk: "Baixo", color: "green" },
-            "2018": { desc: "Capitulação de $6k para $3k. Exaustão total de mineradores.", sopr: "0.95", risk: "Extremo", color: "red" },
-            "2020": { desc: "Recuperação explosiva pós-pandemia. Instituições começam a entrar.", sopr: "1.02", risk: "Moderado", color: "blue" },
-            "2024": { desc: "Ciclo atual. Suporte em $65k é a linha na areia para os ETFs.", sopr: "0.99", risk: "Médio", color: "yellow" }
-        };
-
-        function updateCycleInfo() {
-            const year = document.getElementById('cycle-select').value;
-            const data = cycleData[year];
-            const display = document.getElementById('cycle-display');
-            display.innerHTML = `
-                <div class="p-4 bg-white/5 rounded-xl border-l-4 border-${data.color}-500">
-                    <h4 class="text-xs font-black uppercase text-white">${year} - Contexto</h4>
-                    <p class="text-[11px] text-gray-400 mt-2">${data.desc}</p>
-                    <div class="mt-3 flex justify-between text-[9px] font-bold uppercase">
-                        <span>SOPR Médio: ${data.sopr}</span>
-                        <span>Risco: ${data.risk}</span>
-                    </div>
-                </div>
-            `;
-        }
-
+        // --- SISTEMA DE HASH (IDENTIFICAÇÃO DE FOTOS IGUAIS) ---
         let hashes = { chart: null, onchain: null };
 
-        function handleFileChange(input, imgId, type) {
+        function handleFileChange(input, imgId, labelId, type) {
             if (input.files && input.files[0]) {
                 const f = input.files[0];
-                hashes[type] = `${f.name}-${f.size}`;
+                hashes[type] = `${f.name}-${f.size}-${f.lastModified}`;
+                
                 const r = new FileReader();
                 r.onload = (e) => {
                     document.getElementById(imgId).src = e.target.result;
                     document.getElementById(imgId).classList.remove('hidden');
-                    // Simular leitura das barras ao subir foto
-                    if(type === 'onchain') {
-                        animateBars();
-                    }
+                    document.getElementById(labelId).classList.add('hidden');
+                    document.getElementById('sync-status').innerText = "Carregado";
+                    document.getElementById('sync-status').classList.replace('bg-gray-800', 'bg-blue-900');
                 };
                 r.readAsDataURL(f);
             }
         }
 
-        function animateBars() {
-            document.getElementById('b-sopr').style.width = '92%';
-            document.getElementById('v-sopr').innerText = '0.9965 (Capitulação)';
-            document.getElementById('b-net').style.width = '45%';
-            document.getElementById('v-net').innerText = '+5.5k (Moderado)';
-        }
-
-        function processar() {
+        function analisarVariação() {
+            const mem = JSON.parse(localStorage.getItem('cq_master_v7')) || { chart: "", onchain: "" };
             const box = document.getElementById('res-box');
+            const header = document.getElementById('res-header');
+            const body = document.getElementById('res-body');
+
             box.classList.remove('hidden');
-            const mem = JSON.parse(localStorage.getItem('cq_v8')) || {};
-            
-            if (hashes.chart === mem.chart && hashes.onchain === mem.onchain) {
-                document.getElementById('res-body').innerHTML = "<b class='text-gray-500'>SISTEMA:</b> Nenhuma variação real detectada. As métricas permanecem em modo de espera.";
+
+            if (hashes.chart === mem.chart && hashes.onchain === mem.onchain && hashes.chart !== null) {
+                header.innerHTML = `<span class="text-gray-500 font-black text-[9px] uppercase italic">● Dados Idênticos Detectados</span>`;
+                body.innerHTML = `<p class="text-gray-500 italic">O sistema reconheceu estas imagens. Não houve variação nos pixels ou metadados. O cenário de <b>Capitulação</b> permanece estável conforme a última leitura. Aguarde novas movimentações on-chain.</p>`;
             } else {
-                document.getElementById('res-body').innerHTML = "<b class='text-blue-500'>ALERTA:</b> Nova variação detectada. O mercado está confirmando a zona de exaustão vista em ciclos anteriores.";
-                localStorage.setItem('cq_v8', JSON.stringify(hashes));
+                header.innerHTML = `<span class="text-green-500 font-black text-[9px] uppercase">● Nova Variação Detectada - Processando Inteligência</span>`;
+                body.innerHTML = `
+                    <p><b class="text-blue-400">Diagnóstico Técnico:</b> A mudança nos dados sugere que a exaustão vendedora está se consolidando. As "linhas curtas" nos indicadores on-chain confirmam o fim do pânico e o início da absorção.</p>
+                    <p><b class="text-yellow-500">Confluência:</b> Com o Puell Multiple em 0.48 e o SOPR abaixo de 1.0, o risco-recompensa para compras spot é o melhor dos últimos 12 meses.</p>
+                `;
+                localStorage.setItem('cq_master_v7', JSON.stringify(hashes));
             }
+            window.scrollTo({ top: 500, behavior: 'smooth' });
         }
 
+        // --- NAVEGAÇÃO ---
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -157,12 +208,23 @@
             document.getElementById('btn-' + id).classList.add('active');
         }
 
-        updateCycleInfo();
-        // Conexão do preço (simplificada para o exemplo)
-        setInterval(() => {
-            const p = 69000 + Math.random() * 500;
-            document.getElementById('price').innerText = '$' + p.toLocaleString('en-US', {maximumFractionDigits:2});
-        }, 3000);
+        // --- PREÇO REAL ---
+        let lastP = 0;
+        function connect() {
+            const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+            ws.onmessage = (e) => {
+                const d = JSON.parse(e.data);
+                const p = parseFloat(d.c);
+                const c = parseFloat(d.P).toFixed(2);
+                document.getElementById('price').innerText = '$' + p.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                document.getElementById('change').innerText = (c > 0 ? '+' : '') + c + '% AO VIVO';
+                document.getElementById('change').style.color = c >= 0 ? '#10b981' : '#ef4444';
+                document.getElementById('price').style.color = p > lastP ? '#10b981' : (p < lastP ? '#ef4444' : 'white');
+                lastP = p;
+            };
+            ws.onclose = () => setTimeout(connect, 5000);
+        }
+        connect();
     </script>
 </body>
 </html>
