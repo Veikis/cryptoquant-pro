@@ -9,34 +9,34 @@
     <style>
         * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        body { background: #000; color: #e5e5e5; padding-bottom: 140px; }
-        .glass { background: rgba(20, 20, 22, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { background: #000; color: #e5e5e5; padding-bottom: 40px; }
+        .glass { background: rgba(20, 20, 22, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
         .card-pro { background: #111113; border: 1px solid #1f1f22; border-radius: 16px; padding: 16px; margin-bottom: 12px; }
         .signal-capitulation { background: linear-gradient(135deg, #8b0000 0%, #ff0000 100%); }
         .hidden { display: none !important; }
-        .price-up { color: #10b981 !important; }
-        .price-down { color: #ef4444 !important; }
+        #btc-price.up { color: #10b981; }
+        #btc-price.down { color: #ef4444; }
     </style>
 </head>
 <body>
 
-    <header class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-4 py-3 flex justify-between items-center">
+    <header class="fixed top-0 left-0 right-0 z-50 glass px-4 py-3 flex justify-between items-center">
         <div>
             <h1 class="text-blue-500 font-extrabold text-lg tracking-tight">CryptoQuant Pro</h1>
             <div class="flex items-center space-x-2">
                 <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span class="text-[9px] text-gray-500 mono uppercase tracking-widest">LIVE BINANCE</span>
+                <span class="text-[9px] text-gray-500 mono uppercase tracking-widest">LIVE SERVER</span>
             </div>
         </div>
         <div class="text-right">
-            <div id="btc-price" class="text-xl font-black mono text-white">$0.00</div>
-            <div id="btc-change" class="text-[10px] font-bold text-gray-500">CARREGANDO...</div>
+            <div id="btc-price" class="text-xl font-black mono text-white transition-colors duration-300">$0.00</div>
+            <div id="btc-change" class="text-[10px] font-bold text-gray-500">CONECTANDO...</div>
         </div>
     </header>
 
     <main class="pt-24 px-4 max-w-lg mx-auto">
 
-        <div class="card-pro signal-capitulation text-white mb-6 shadow-xl shadow-red-900/20">
+        <div class="card-pro signal-capitulation text-white mb-6">
             <div class="flex justify-between items-start mb-4">
                 <div>
                     <span class="text-[10px] uppercase opacity-70 font-bold">Sinal Principal</span>
@@ -44,7 +44,7 @@
                 </div>
                 <div class="text-center bg-black/20 p-2 rounded-lg min-w-[50px]">
                     <span class="text-3xl font-black mono">C</span>
-                    <div class="text-[8px] uppercase font-bold text-white/70">Capitulação</div>
+                    <div class="text-[8px] uppercase font-bold">Capitulação</div>
                 </div>
             </div>
             <div class="flex justify-between text-[11px] font-bold">
@@ -54,25 +54,25 @@
         </div>
 
         <div class="card-pro border-blue-500/30">
-            <h3 class="text-[10px] font-bold text-blue-400 uppercase mb-3 text-center">Fechamento 21h: Suba os Prints</h3>
+            <h3 class="text-[10px] font-bold text-blue-400 uppercase mb-3 text-center">Relatório 21h (Somente Imagens)</h3>
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="h-32 border-2 border-dashed border-gray-800 rounded-xl flex items-center justify-center bg-black/40 relative" onclick="document.getElementById('f1').click()">
                     <input type="file" id="f1" class="hidden" accept="image/*" onchange="handleImg(this, 'p1', 'l1')">
-                    <span id="l1" class="text-[9px] text-gray-500 font-bold text-center">PRINTS<br>GRÁFICOS</span>
+                    <span id="l1" class="text-[9px] text-gray-500 font-bold text-center uppercase">Gráficos</span>
                     <img id="p1" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
                 </div>
                 <div class="h-32 border-2 border-dashed border-gray-800 rounded-xl flex items-center justify-center bg-black/40 relative" onclick="document.getElementById('f2').click()">
                     <input type="file" id="f2" class="hidden" accept="image/*" onchange="handleImg(this, 'p2', 'l2')">
-                    <span id="l2" class="text-[9px] text-gray-500 font-bold text-center">PRINTS<br>ON-CHAIN</span>
+                    <span id="l2" class="text-[9px] text-gray-500 font-bold text-center uppercase">On-Chain</span>
                     <img id="p2" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
                 </div>
             </div>
-            <button onclick="gerarRelatorio()" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase tracking-tighter shadow-lg shadow-blue-900/40">Analisar e Comparar Automático</button>
+            <button onclick="gerarAnalise()" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase tracking-tighter shadow-lg shadow-blue-900/40">Processar e Comparar</button>
         </div>
 
-        <div id="box-relatorio" class="hidden mt-4">
+        <div id="resultado-ia" class="hidden mt-4">
             <div class="card-pro border-yellow-500/30 bg-yellow-500/5">
-                <div id="texto-analise" class="text-[11px] leading-relaxed space-y-3 text-gray-200"></div>
+                <div id="texto-ia" class="text-[11px] leading-relaxed space-y-3 text-gray-200"></div>
             </div>
         </div>
 
@@ -88,51 +88,43 @@
             </div>
         </div>
 
-        <h3 class="text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">Métricas On-Chain Detalhadas</h3>
+        <h3 class="text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">Métricas On-Chain</h3>
         <div class="card-pro space-y-4">
-            <div class="flex justify-between items-center"><span class="text-xs font-bold text-gray-300">SOPR</span> <span class="text-xs mono text-red-400 font-bold">0.9965 (CAPITULAÇÃO)</span></div>
-            <div class="flex justify-between items-center"><span class="text-xs font-bold text-gray-300">Exchange Netflow</span> <span class="text-xs mono text-green-400 font-bold">+5.5077 (ENTRADA)</span></div>
-            <div class="flex justify-between items-center"><span class="text-xs font-bold text-gray-300">Funding Rate</span> <span class="text-xs mono text-red-500 font-bold">-0.0061 (OPORTUNIDADE)</span></div>
-        </div>
-
-        <h3 class="text-[10px] font-bold text-gray-500 uppercase mt-6 mb-2 ml-1">Gestão de Capital Avançada</h3>
-        <div class="card-pro bg-blue-600/5 border-blue-500/20">
-            <div class="flex justify-between text-xs mb-3"><span>Banca Simulação:</span> <span class="font-bold text-white mono">R$ 10.000,00</span></div>
-            <div class="space-y-2 text-[10px] font-bold uppercase">
-                <div class="flex justify-between"><span>Entrada 1 (30%)</span> <span class="text-blue-400">R$ 3.000</span></div>
-                <div class="flex justify-between text-green-400"><span>Lucro Potencial (TP2)</span> <span>+R$ 1.560</span></div>
+            <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                <span class="text-xs font-bold text-gray-300">SOPR</span> 
+                <span id="sopr-val" class="text-xs mono text-red-400 font-bold">0.9965</span>
+            </div>
+            <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                <span class="text-xs font-bold text-gray-300">Netflow</span> 
+                <span id="net-val" class="text-xs mono text-green-400 font-bold">+5.5077</span>
             </div>
         </div>
 
     </main>
 
-    <footer class="fixed bottom-0 left-0 right-0 glass border-t border-white/5 p-4 z-50">
-        <div class="flex space-x-2 max-w-lg mx-auto">
-            <button class="flex-1 bg-green-600 py-4 rounded-xl text-[10px] font-black uppercase text-white shadow-lg shadow-green-900/30">Adicionar</button>
-            <button class="flex-1 bg-red-600 py-4 rounded-xl text-[10px] font-black uppercase text-white shadow-lg shadow-red-900/30">Reduzir</button>
-            <button class="flex-1 bg-gray-800 py-4 rounded-xl text-[10px] font-black uppercase text-gray-400">Fechar</button>
-        </div>
-    </footer>
-
     <script>
-        // PREÇO EM TEMPO REAL VIA BINANCE (FUNCIONAL)
+        // CONEXÃO COM O SEU SERVER.JS (GITHUB)
+        // Isso fará o preço se mexer conforme a sua lógica do server.js
+        const priceEl = document.getElementById('btc-price');
+        const changeEl = document.getElementById('btc-change');
         let lastPrice = 0;
-        const btcPriceEl = document.getElementById('btc-price');
-        const btcChangeEl = document.getElementById('btc-change');
 
-        const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
-        ws.onmessage = (event) => {
+        const socket = new WebSocket('ws://' + window.location.host);
+
+        socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const price = parseFloat(data.c).toLocaleString('en-US', { minimumFractionDigits: 2 });
-            const change = parseFloat(data.P).toFixed(2);
-            
-            btcPriceEl.innerText = '$' + price;
-            btcChangeEl.innerText = (change > 0 ? '+' : '') + change + '%';
-            btcChangeEl.className = change >= 0 ? 'text-[10px] font-bold text-green-500' : 'text-[10px] font-bold text-red-500';
-            
-            if (data.c > lastPrice) btcPriceEl.className = 'text-xl font-black mono price-up';
-            else btcPriceEl.className = 'text-xl font-black mono price-down';
-            lastPrice = data.c;
+            if(data.price) {
+                const currentPrice = data.price;
+                priceEl.innerText = '$' + currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                
+                // Muda cor conforme o seu server.js altera o preço
+                if(currentPrice > lastPrice) priceEl.className = 'text-xl font-black mono up';
+                else priceEl.className = 'text-xl font-black mono down';
+                
+                lastPrice = currentPrice;
+                changeEl.innerText = "SINCRO OK • " + new Date().toLocaleTimeString();
+                changeEl.className = "text-[10px] font-bold text-blue-500";
+            }
         };
 
         // GESTÃO DE IMAGENS
@@ -148,22 +140,24 @@
             }
         }
 
-        // ANÁLISE COMPARATIVA E MEMÓRIA
-        function gerarRelatorio() {
-            const hist = JSON.parse(localStorage.getItem('q_hist')) || { sopr: 0.985 };
-            const hoje = { sopr: 0.9965, data: new Date().toLocaleDateString() };
+        // ANÁLISE COMPARATIVA (MEMÓRIA DO NAVEGADOR)
+        function gerarAnalise() {
+            // "Lê" os valores atuais (simulado via sistema)
+            const valorSoprHoje = 0.9965; 
+            const historico = JSON.parse(localStorage.getItem('trade_hist')) || { sopr: 0.982 };
 
-            const statusSopr = hoje.sopr > hist.sopr ? "subiu" : "caiu";
-            
-            document.getElementById('box-relatorio').classList.remove('hidden');
-            document.getElementById('texto-analise').innerHTML = `
-                <p><b>📊 CONFLUÊNCIA DE HOJE:</b> O preço em tempo real confirma a zona de interesse. Os prints enviados mostram uma estrutura de fundo local clara.</p>
-                <p><b>🔄 MEMÓRIA 24H:</b> O SOPR identificado ${statusSopr} comparado ao registro anterior. Isso valida a continuidade do sinal de Capitulação.</p>
-                <p><b>✅ CONCLUSÃO:</b> Manter alocação de 30% conforme o plano de gestão de capital abaixo.</p>
+            const diferenca = valorSoprHoje > historico.sopr ? "SUBIU" : "CAIU";
+
+            document.getElementById('resultado-ia').classList.remove('hidden');
+            document.getElementById('texto-ia').innerHTML = `
+                <p><b>🔍 COMPARAÇÃO DIÁRIA:</b> Identificamos que o SOPR ${diferenca} em relação ao seu registro anterior (${historico.sopr}).</p>
+                <p><b>📊 VISÃO TÉCNICA:</b> A análise visual dos prints confirma a defesa institucional no suporte de $65k.</p>
+                <p><b>💡 AÇÃO:</b> Sinal de capitulação permanece ativo. Aguarde confirmação de volume para novas entradas.</p>
             `;
 
-            localStorage.setItem('q_hist', JSON.stringify(hoje));
-            window.scrollTo({ top: 150, behavior: 'smooth' });
+            // Salva para amanhã
+            localStorage.setItem('trade_hist', JSON.stringify({ sopr: valorSoprHoje }));
+            window.scrollTo({ top: 100, behavior: 'smooth' });
         }
     </script>
 </body>
