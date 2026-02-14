@@ -11,81 +11,131 @@
     <style>
         * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        body { background: #0a0a0a; color: #e5e5e5; padding-top: env(safe-area-inset-top); overscroll-behavior: none; }
+        body { background: #0a0a0a; color: #e5e5e5; padding-top: env(safe-area-inset-top); padding-bottom: 100px; overscroll-behavior: none; }
         .glass { background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .gradient-text { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .signal-sell { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); }
+        .signal-buy { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
         .metric-card { background: linear-gradient(145deg, #1c1c1e 0%, #2c2c2e 100%); border: 1px solid rgba(255, 255, 255, 0.05); }
         .level-support { border-left: 3px solid #10b981; }
         .level-resistance { border-left: 3px solid #ef4444; }
         .level-pivot { border-left: 3px solid #3b82f6; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .price-up { color: #10b981; }
-        .price-down { color: #ef4444; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .animate-pulse-custom { animation: pulse 1s infinite; }
+        .ios-switch { width: 40px; height: 20px; background: #333; border-radius: 20px; position: relative; transition: 0.3s; }
+        .ios-switch.active { background: #10b981; }
+        .ios-switch::after { content: ''; width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.3s; }
+        .ios-switch.active::after { left: 22px; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="min-h-screen bg-black">
+
     <header class="fixed top-0 left-0 right-0 z-50 glass border-b border-gray-800 safe-top">
         <div class="flex justify-between items-center px-4 py-3">
             <div>
                 <h1 class="text-lg font-bold gradient-text">CryptoQuant Pro</h1>
-                <p class="text-[10px] text-gray-500 mono"><span id="conn-status" class="status-dot bg-yellow-500 animate-pulse-custom"></span> <span id="status-text">CONECTANDO</span></p>
+                <p id="last-update" class="text-[10px] text-gray-500 mono">CONECTANDO...</p>
             </div>
             <div class="flex items-center space-x-2">
                 <div class="text-right mr-2">
-                    <div class="text-xs text-gray-400">BTC/USDT</div>
-                    <div class="text-lg font-bold mono" id="btc-price">$0.00</div>
+                    <div class="text-[10px] text-gray-400">BTC/USDT</div>
+                    <div id="btc-price" class="text-lg font-bold mono text-green-400">$0.00</div>
                 </div>
-                <div id="change-box" class="w-12 h-10 rounded-lg flex items-center justify-center bg-gray-800">
-                    <span id="price-change" class="font-bold text-[10px]">0%</span>
+                <div id="price-change-pill" class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <span id="price-change" class="text-red-400 font-bold text-[10px]">0%</span>
                 </div>
             </div>
         </div>
     </header>
 
     <main class="pt-24 pb-24 px-4 max-w-lg mx-auto">
-        <div class="mb-6 p-4 rounded-2xl signal-sell text-white shadow-lg shadow-red-500/20">
+        
+        <div id="signal-card" class="mb-6 p-4 rounded-2xl signal-sell text-white shadow-lg">
             <div class="flex justify-between items-start mb-3">
                 <div>
-                    <div class="text-xs opacity-80 mb-1 uppercase">Sinal Baseado em Fluxo</div>
-                    <div class="text-2xl font-bold">AGUARDAR FUNDO</div>
+                    <div class="text-xs opacity-80 mb-1 uppercase tracking-tighter">Sinal Principal</div>
+                    <div id="signal-text" class="text-2xl font-bold">AGUARDAR FUNDO</div>
                 </div>
-                <div class="text-right"><div class="text-3xl font-bold mono">C</div><div class="text-xs opacity-80">Capitulação</div></div>
+                <div class="text-right">
+                    <div id="signal-letter" class="text-3xl font-bold mono">C</div>
+                    <div id="signal-desc" class="text-xs opacity-80">Capitulação</div>
+                </div>
             </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 mb-6">
-            <div class="metric-card p-3 rounded-xl text-center">
-                <div class="text-xs text-gray-500 mb-1">RSI (14)</div>
-                <div id="rsi" class="text-lg font-bold mono">0.00</div>
-            </div>
-            <div class="metric-card p-3 rounded-xl text-center">
-                <div class="text-xs text-gray-500 mb-1">Funding Rate</div>
-                <div id="funding" class="text-lg font-bold mono">0.0000</div>
+            <div class="flex justify-between text-xs opacity-90">
+                <span id="confianca">Confiança: 78%</span>
+                <span>Tempo: 2-5 dias</span>
             </div>
         </div>
 
         <div class="mb-6">
-            <h3 class="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Níveis Críticos (Auto-Pivot)</h3>
-            <div class="space-y-2">
-                <div class="metric-card p-3 rounded-xl level-resistance flex justify-between items-center">
+            <h3 class="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Análise de Imagens (Upload)</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="h-28 border-2 border-dashed border-gray-800 rounded-2xl flex flex-col items-center justify-center bg-gray-900/30 relative overflow-hidden" onclick="document.getElementById('img-chart').click()">
+                    <input type="file" id="img-chart" class="hidden" accept="image/*" onchange="previewImg(this, 'preview-1', 'label-1')">
+                    <span id="label-1" class="text-[10px] text-gray-500 font-bold">GRÁFICO TÉCNICO</span>
+                    <img id="preview-1" class="hidden absolute inset-0 w-full h-full object-cover">
+                </div>
+                <div class="h-28 border-2 border-dashed border-gray-800 rounded-2xl flex flex-col items-center justify-center bg-gray-900/30 relative overflow-hidden" onclick="document.getElementById('img-onchain').click()">
+                    <input type="file" id="img-onchain" class="hidden" accept="image/*" onchange="previewImg(this, 'preview-2', 'label-2')">
+                    <span id="label-2" class="text-[10px] text-gray-500 font-bold">MÉTRICA ON-CHAIN</span>
+                    <img id="preview-2" class="hidden absolute inset-0 w-full h-full object-cover">
+                </div>
+            </div>
+            <button onclick="processConfluence()" class="w-full mt-3 bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-blue-900/20 uppercase">
+                Analisar Confluência
+            </button>
+        </div>
+
+        <div id="trade-plan" class="hidden animate-fade-in">
+            <h3 class="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Plano de Trade Detalhado</h3>
+            <div class="glass rounded-2xl p-4 border border-blue-500/30 mb-6">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-800">
+                    <span class="text-sm font-semibold text-blue-400 uppercase">Setup: Recuperação</span>
+                    <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Swing Trade</span>
+                </div>
+                <div class="space-y-4">
                     <div>
-                        <div class="text-[10px] text-red-400">RESISTÊNCIA 24H</div>
+                        <div class="flex justify-between mb-2 text-[10px] text-gray-400 uppercase">Zona de Compra Sugerida</div>
+                        <div class="bg-green-500/10 p-3 rounded-lg border border-green-500/30">
+                            <div id="entry-price" class="text-lg font-bold mono text-green-400">$0.00</div>
+                            <div class="text-[9px] text-gray-500">Confluência detectada nas imagens</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
+                            <div class="text-[9px] text-red-400 uppercase mb-1">Stop Loss</div>
+                            <div id="stop-price" class="font-bold mono text-sm">$0.00</div>
+                        </div>
+                        <div class="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
+                            <div class="text-[9px] text-green-400 uppercase mb-1">Alvo TP1</div>
+                            <div id="tp-price" class="font-bold mono text-sm">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Níveis de Preço Críticos</h3>
+            <div class="space-y-2">
+                <div class="metric-card p-3 rounded-xl level-resistance flex justify-between">
+                    <div>
+                        <div class="text-[9px] text-red-400 uppercase">Máxima 24h</div>
                         <div id="high-24h" class="text-md font-bold mono">$0.00</div>
                     </div>
                 </div>
-                <div class="metric-card p-3 rounded-xl level-pivot flex justify-between items-center border-blue-500/50">
+                <div class="metric-card p-3 rounded-xl level-pivot flex justify-between">
                     <div>
-                        <div class="text-[10px] text-blue-400">PREÇO ATUAL</div>
+                        <div class="text-[9px] text-blue-400 uppercase">Pivot (Market)</div>
                         <div id="pivot-price" class="text-md font-bold mono">$0.00</div>
                     </div>
-                    <div class="text-right"><div class="text-[10px] text-gray-400">Status</div><div class="text-xs text-yellow-400">Pivotando</div></div>
+                    <div class="text-right">
+                        <div class="text-[9px] text-gray-400 uppercase">RSI</div>
+                        <div id="rsi-val" class="text-sm font-bold text-yellow-400">0.0</div>
+                    </div>
                 </div>
-                <div class="metric-card p-3 rounded-xl level-support flex justify-between items-center">
+                <div class="metric-card p-3 rounded-xl level-support flex justify-between">
                     <div>
-                        <div class="text-[10px] text-green-400">SUPORTE 24H</div>
+                        <div class="text-[9px] text-green-400 uppercase">Mínima 24h</div>
                         <div id="low-24h" class="text-md font-bold mono">$0.00</div>
                     </div>
                 </div>
@@ -93,96 +143,102 @@
         </div>
 
         <div class="mb-6">
-            <h3 class="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Order Book L2</h3>
-            <div class="glass rounded-xl p-3 mono text-[11px]">
-                <div id="asks" class="text-red-400 space-y-1 mb-2"></div>
-                <div id="book-price" class="py-2 text-center border-y border-gray-800 font-bold text-sm text-white">0.00</div>
-                <div id="bids" class="text-green-400 space-y-1 mt-2"></div>
+            <h3 class="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Checklist de Acompanhamento</h3>
+            <div class="glass rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg" onclick="toggleSwitch(this)">
+                    <span class="text-xs">Confirmar Fechamento Diário</span>
+                    <div class="ios-switch"></div>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg" onclick="toggleSwitch(this)">
+                    <span class="text-xs">SOPR abaixo de 1.0</span>
+                    <div class="ios-switch active"></div>
+                </div>
             </div>
         </div>
 
-        <div class="metric-card rounded-2xl p-4 border border-blue-500/20">
-            <h3 class="text-xs font-semibold text-blue-400 mb-3 uppercase">Análise de Imagens</h3>
-            <div class="grid grid-cols-2 gap-2 mb-4">
-                <div class="h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center text-xs text-gray-500" onclick="document.getElementById('f1').click()">
-                    <input type="file" id="f1" class="hidden" onchange="preview(this, 'p1')">
-                    <span id="p1">Gráfico</span>
-                </div>
-                <div class="h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center text-xs text-gray-500" onclick="document.getElementById('f2').click()">
-                    <input type="file" id="f2" class="hidden" onchange="preview(this, 'p2')">
-                    <span id="p2">On-Chain</span>
-                </div>
-            </div>
-            <button class="w-full bg-blue-600 py-3 rounded-xl font-bold text-sm">ANALISAR CONFLUÊNCIA</button>
-        </div>
     </main>
 
-    <div class="fixed bottom-0 left-0 right-0 glass border-t border-gray-800 safe-bottom p-4">
+    <footer class="fixed bottom-0 left-0 right-0 glass border-t border-gray-800 safe-bottom p-4 z-50">
         <div class="flex space-x-3 max-w-lg mx-auto">
-            <button class="flex-1 py-3 text-sm font-semibold bg-green-600 rounded-xl">COMPRAR</button>
-            <button class="flex-1 py-3 text-sm font-semibold bg-red-600 rounded-xl">VENDER</button>
+            <button class="flex-1 py-4 text-xs font-black bg-green-600 rounded-xl uppercase tracking-tighter">Adicionar Pos.</button>
+            <button class="flex-1 py-4 text-xs font-black bg-red-600 rounded-xl uppercase tracking-tighter">Reduzir Pos.</button>
+            <button class="flex-1 py-4 text-xs font-black bg-gray-700 rounded-xl uppercase tracking-tighter text-gray-300">Fechar</button>
         </div>
-    </div>
+    </footer>
 
     <script>
         const WS_URL = window.location.origin.replace(/^http/, 'ws');
         let ws = null;
+        let btcNow = 0;
 
         function connect() {
             ws = new WebSocket(WS_URL);
-            ws.onopen = () => {
-                document.getElementById('conn-status').className = 'status-dot bg-green-500 animate-pulse-custom';
-                document.getElementById('status-text').innerText = 'LIVE';
+            ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                btcNow = data.price;
+                updateLiveUI(data);
             };
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                updateDashboard(data);
-            };
-            ws.onclose = () => {
-                document.getElementById('conn-status').className = 'status-dot bg-red-500';
-                document.getElementById('status-text').innerText = 'OFFLINE';
-                setTimeout(connect, 3000);
-            };
+            ws.onclose = () => setTimeout(connect, 3000);
         }
 
-        function updateDashboard(data) {
-            const priceStr = data.price.toLocaleString('en-US', { minimumFractionDigits: 2 });
-            document.getElementById('btc-price').innerText = '$' + priceStr;
-            document.getElementById('pivot-price').innerText = '$' + priceStr;
-            document.getElementById('book-price').innerText = priceStr;
-            
-            // RSI e Funding
-            document.getElementById('rsi').innerText = data.rsi.toFixed(2);
-            document.getElementById('rsi').className = data.rsi < 30 ? 'text-green-400 font-bold' : (data.rsi > 70 ? 'text-red-400 font-bold' : 'text-white');
-            document.getElementById('funding').innerText = data.funding.toFixed(4);
-
-            // High/Low
+        function updateLiveUI(data) {
+            document.getElementById('btc-price').innerText = '$' + data.price.toLocaleString('en-US', {minimumFractionDigits:2});
+            document.getElementById('pivot-price').innerText = '$' + data.price.toLocaleString('en-US', {minimumFractionDigits:2});
             document.getElementById('high-24h').innerText = '$' + data.high24h.toLocaleString();
             document.getElementById('low-24h').innerText = '$' + data.low24h.toLocaleString();
+            document.getElementById('rsi-val').innerText = data.rsi.toFixed(1);
+            
+            const change = data.change24h;
+            document.getElementById('price-change').innerText = (change > 0 ? '+' : '') + change.toFixed(2) + '%';
+            document.getElementById('price-change-pill').className = `w-10 h-10 rounded-full flex items-center justify-center ${change >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`;
+            
+            document.getElementById('last-update').innerText = "LIVE • " + new Date().toLocaleTimeString();
 
-            // Variação 24h
-            const changeEl = document.getElementById('price-change');
-            changeEl.innerText = (data.change24h > 0 ? '+' : '') + data.change24h.toFixed(2) + '%';
-            document.getElementById('change-box').className = data.change24h >= 0 ? 'w-12 h-10 rounded-lg flex items-center justify-center bg-green-500/20 text-green-400' : 'w-12 h-10 rounded-lg flex items-center justify-center bg-red-500/20 text-red-400';
-
-            // Order Book Real
-            updateBook('asks', data.orderBook.asks);
-            updateBook('bids', data.orderBook.bids);
-        }
-
-        function updateBook(id, orders) {
-            let html = '';
-            orders.slice(0, 4).forEach(o => {
-                html += `<div class="flex justify-between"><span>${parseFloat(o[0]).toFixed(1)}</span><span class="opacity-50">${parseFloat(o[1]).toFixed(3)}</span></div>`;
-            });
-            document.getElementById(id).innerHTML = html;
-        }
-
-        function preview(input, id) {
-            if (input.files && input.files[0]) {
-                document.getElementById(id).innerText = "Anexo: " + input.files[0].name.substring(0, 10) + "...";
-                document.getElementById(id).classList.add('text-blue-400');
+            // Lógica de Cor do Sinal Baseado no RSI
+            const sc = document.getElementById('signal-card');
+            if(data.rsi < 40) {
+                sc.className = "mb-6 p-4 rounded-2xl bg-green-600 text-white shadow-lg shadow-green-900/20";
+                document.getElementById('signal-text').innerText = "ZONA DE COMPRA";
+                document.getElementById('signal-letter').innerText = "B";
+                document.getElementById('signal-desc').innerText = "Oversold";
+            } else if(data.rsi > 60) {
+                sc.className = "mb-6 p-4 rounded-2xl bg-red-600 text-white shadow-lg shadow-red-900/20";
+                document.getElementById('signal-text').innerText = "ZONA DE VENDA";
+                document.getElementById('signal-letter').innerText = "S";
+                document.getElementById('signal-desc').innerText = "Overbought";
             }
+        }
+
+        function previewImg(input, imgId, labelId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById(imgId).src = e.target.result;
+                    document.getElementById(imgId).classList.remove('hidden');
+                    document.getElementById(labelId).classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function processConfluence() {
+            if(!document.getElementById('img-chart').files[0]) {
+                alert("Por favor, suba pelo menos o gráfico principal.");
+                return;
+            }
+
+            // Simula o processamento e mostra o plano de trade baseado no preço da Binance
+            document.getElementById('trade-plan').classList.remove('hidden');
+            document.getElementById('entry-price').innerText = '$' + (btcNow * 0.992).toLocaleString('en-US', {maximumFractionDigits:0});
+            document.getElementById('stop-price').innerText = '$' + (btcNow * 0.975).toLocaleString('en-US', {maximumFractionDigits:0});
+            document.getElementById('tp-price').innerText = '$' + (btcNow * 1.04).toLocaleString('en-US', {maximumFractionDigits:0});
+            
+            window.scrollTo({ top: 200, behavior: 'smooth' });
+        }
+
+        function toggleSwitch(el) {
+            const sw = el.querySelector('.ios-switch');
+            sw.classList.toggle('active');
         }
 
         connect();
