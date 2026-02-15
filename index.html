@@ -2,10 +2,9 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CQ Ultra - Motor Quântico</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
         
@@ -23,6 +22,7 @@
         * {
             font-family: 'Inter', sans-serif;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
@@ -30,6 +30,8 @@
             color: #fff;
             min-height: 100vh;
             overflow-x: hidden;
+            margin: 0;
+            padding: 0;
         }
         
         .mono { font-family: 'JetBrains Mono', monospace; }
@@ -38,6 +40,7 @@
         .glass-header { 
             background: rgba(2, 2, 2, 0.95); 
             backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px);
             border-bottom: 1px solid rgba(255,255,255,0.08); 
         }
         
@@ -92,13 +95,24 @@
             padding: 10px 4px; 
             border-bottom: 2px solid transparent; 
             transition: 0.3s; 
+            cursor: pointer;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            white-space: nowrap;
         }
         .tab-btn.active { 
             color: var(--blue); 
-            border-color: var(--blue); 
+            border-bottom-color: var(--blue); 
         }
         
-        .hidden { display: none !important; }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
         
         .gauge-bg { 
             background: #1a1a1c; 
@@ -137,30 +151,33 @@
             margin-bottom: 4px;
         }
         
-        /* Mini Charts */
-        .sparkline {
+        .tech-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        @media (max-width: 640px) {
+            .tech-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Upload areas */
+        .upload-area {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
             width: 100%;
-            height: 40px;
+            height: 100%;
         }
-        
-        /* Níveis de Fibonacci */
-        .fib-level {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 8px;
-            margin-bottom: 6px;
-            border-left: 3px solid transparent;
-        }
-        .fib-active {
-            background: rgba(59, 130, 246, 0.1);
-            border-left-color: var(--blue);
-        }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
         
         /* Animação de scan */
         @keyframes scan {
@@ -178,15 +195,25 @@
             pointer-events: none;
         }
         
-        /* Grid de indicadores técnicos */
-        .tech-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+        /* Fib levels */
+        .fib-level {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border-left: 3px solid transparent;
         }
-        @media (max-width: 640px) {
-            .tech-grid { grid-template-columns: 1fr; }
+        .fib-active {
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: var(--blue);
         }
+        
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -205,7 +232,7 @@
     </div>
 </header>
 
-<main class="pt-28 px-4 max-w-xl mx-auto">
+<main class="pt-28 px-4 max-w-xl mx-auto pb-20">
 
     <div class="mb-8">
         <div class="flex justify-between items-end mb-3">
@@ -223,14 +250,15 @@
     </div>
 
     <nav class="flex space-x-6 mb-8 px-2 overflow-x-auto no-scrollbar border-b border-white/5">
-        <button onclick="switchTab('terminal')" id="btn-terminal" class="tab-btn active">Terminal</button>
-        <button onclick="switchTab('detalhes')" id="btn-detalhes" class="tab-btn">On-Chain</button>
-        <button onclick="switchTab('tecnico')" id="btn-tecnico" class="tab-btn">Técnico</button>
-        <button onclick="switchTab('miner')" id="btn-miner" class="tab-btn">Mineradores</button>
-        <button onclick="switchTab('hist')" id="btn-hist" class="tab-btn">Padrões</button>
+        <button class="tab-btn active" data-tab="terminal">Terminal</button>
+        <button class="tab-btn" data-tab="detalhes">On-Chain</button>
+        <button class="tab-btn" data-tab="tecnico">Técnico</button>
+        <button class="tab-btn" data-tab="miner">Mineradores</button>
+        <button class="tab-btn" data-tab="hist">Padrões</button>
     </nav>
 
-    <section id="tab-terminal" class="tab-content">
+    <!-- TAB TERMINAL -->
+    <section id="tab-terminal" class="tab-content active">
         <div class="card-pro border-blue-500/20">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-[11px] font-black text-blue-400 uppercase">Entrada de Dados 21:00h</h3>
@@ -238,20 +266,20 @@
             </div>
             
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <div class="h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative group overflow-hidden" onclick="document.getElementById('f1').click()">
-                    <input type="file" id="f1" class="hidden" onchange="handleFileChange(this, 'p1', 'l1', 'chart')" accept="image/*">
+                <div class="upload-area h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative overflow-hidden group">
+                    <input type="file" id="f1" accept="image/*" onchange="handleFile(this, 'p1', 'l1', 'chart')">
                     <img id="p1" class="hidden absolute inset-0 w-full h-full object-cover">
-                    <span id="l1" class="text-[10px] font-black text-gray-600 group-hover:text-blue-500 transition-colors uppercase">Gráficos</span>
+                    <span id="l1" class="text-[10px] font-black text-gray-600 group-hover:text-blue-500 transition-colors uppercase pointer-events-none">Gráficos</span>
                 </div>
-                <div class="h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative group overflow-hidden" onclick="document.getElementById('f2').click()">
-                    <input type="file" id="f2" class="hidden" onchange="handleFileChange(this, 'p2', 'l2', 'onchain')" accept="image/*">
+                <div class="upload-area h-36 border-2 border-dashed border-gray-800 rounded-[30px] flex flex-col items-center justify-center bg-black/40 relative overflow-hidden group">
+                    <input type="file" id="f2" accept="image/*" onchange="handleFile(this, 'p2', 'l2', 'onchain')">
                     <img id="p2" class="hidden absolute inset-0 w-full h-full object-cover">
                     <div id="scan-effect" class="scan-line hidden"></div>
-                    <span id="l2" class="text-[10px] font-black text-gray-600 group-hover:text-blue-500 transition-colors uppercase">On-Chain</span>
+                    <span id="l2" class="text-[10px] font-black text-gray-600 group-hover:text-blue-500 transition-colors uppercase pointer-events-none">On-Chain</span>
                 </div>
             </div>
             
-            <button onclick="analisarVariação()" class="w-full bg-blue-600 hover:bg-blue-700 py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all">Sincronizar e Comparar</button>
+            <button onclick="analisar()" class="w-full bg-blue-600 hover:bg-blue-700 py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all">Sincronizar e Comparar</button>
         </div>
 
         <div id="res-box" class="hidden card-pro border-white/5 bg-white/[0.02]">
@@ -260,276 +288,127 @@
         </div>
     </section>
 
-    <!-- ABA ON-CHAIN (mantida como estava) -->
-    <section id="tab-detalhes" class="tab-content hidden">
+    <!-- TAB ON-CHAIN -->
+    <section id="tab-detalhes" class="tab-content">
         <div class="card-pro space-y-8">
             <h3 class="text-[11px] font-black text-blue-400 uppercase tracking-widest border-b border-white/5 pb-2">Enciclopédia On-Chain</h3>
             
             <div id="indicadores-dinamicos" class="space-y-6 hidden">
-                <div id="sopr-container" class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
+                <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
                     <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-xs font-black text-white uppercase">SOPR (Taxa de Lucro Gastos)</h4>
-                        <span id="sopr-status" class="status-badge status-extreme-fear">● Capitulação Extrema</span>
+                        <h4 class="text-xs font-black text-white uppercase">SOPR</h4>
+                        <span id="sopr-status" class="status-badge status-extreme-fear">● Capitulação</span>
                     </div>
                     <div id="sopr-valor" class="indicator-value text-red-500">0.94</div>
-                    <p id="sopr-desc" class="text-[11px] text-gray-400 leading-relaxed">
-                        Valor abaixo de 1.0 confirma que investidores estão realizando prejuízo. 
-                        O medo dominou o mercado. Este é um sinal clássico de fundo de ciclo.
-                    </p>
+                    <p id="sopr-desc" class="text-[11px] text-gray-400 leading-relaxed">Mede lucro/prejuízo na venda de BTC.</p>
                     <div class="mt-3 flex items-center gap-2">
                         <div class="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
                             <div id="sopr-bar" class="h-full bg-red-500 rounded-full" style="width: 30%"></div>
                         </div>
-                        <span class="text-[8px] text-gray-600 uppercase font-bold">Nível de Medo</span>
                     </div>
                 </div>
 
-                <div id="netflow-container" class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
+                <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
                     <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-xs font-black text-white uppercase">Netflow das Exchanges</h4>
-                        <span id="netflow-status" class="status-badge status-greed">● Pressão Vendedora Esgotada</span>
+                        <h4 class="text-xs font-black text-white uppercase">Netflow</h4>
+                        <span id="netflow-status" class="status-badge status-greed">● Retirada</span>
                     </div>
                     <div id="netflow-valor" class="indicator-value text-green-500">-2,450 BTC</div>
-                    <p id="netflow-desc" class="text-[11px] text-gray-400 leading-relaxed">
-                        Fluxo negativo massivo indica retirada de BTC das corretoras. 
-                        As linhas de entrada estão em exaustão. Sem pressão vendedora ativa.
-                    </p>
-                    <div class="mt-3 flex items-center gap-2">
-                        <div class="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div id="netflow-bar" class="h-full bg-green-500 rounded-full" style="width: 85%"></div>
-                        </div>
-                        <span class="text-[8px] text-gray-600 uppercase font-bold">Absorção</span>
-                    </div>
+                    <p id="netflow-desc" class="text-[11px] text-gray-400 leading-relaxed">Fluxo de entrada/saída das exchanges.</p>
                 </div>
 
-                <div id="funding-container" class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
+                <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
                     <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-xs font-black text-white uppercase">Funding Rates</h4>
-                        <span id="funding-status" class="status-badge status-fear">● Pessimismo Extremo</span>
+                        <h4 class="text-xs font-black text-white uppercase">Funding Rate</h4>
+                        <span id="funding-status" class="status-badge status-fear">● Negativo</span>
                     </div>
                     <div id="funding-valor" class="indicator-value text-yellow-500">-0.015%</div>
-                    <p id="funding-desc" class="text-[11px] text-gray-400 leading-relaxed">
-                        Taxas negativas mostram que shorts estão pagando longs. 
-                        O mercado está excessivamente apostado na queda. Risco de Short Squeeze iminente.
-                    </p>
-                    <div class="mt-3 flex items-center gap-2">
-                        <div class="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div id="funding-bar" class="h-full bg-yellow-500 rounded-full" style="width: 20%"></div>
-                        </div>
-                        <span class="text-[8px] text-gray-600 uppercase font-bold">Squeeze Potencial</span>
-                    </div>
+                    <p id="funding-desc" class="text-[11px] text-gray-400 leading-relaxed">Taxa entre traders de futuros.</p>
                 </div>
             </div>
 
             <div id="indicadores-vazio" class="text-center py-8">
                 <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-900 flex items-center justify-center">
                     <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                 </div>
                 <p class="text-[11px] text-gray-500">Nenhum dado on-chain detectado.</p>
-                <p class="text-[10px] text-gray-600 mt-1">Faça upload do print na aba Terminal.</p>
+                <p class="text-[10px] text-gray-600 mt-1">Faça upload na aba Terminal.</p>
             </div>
         </div>
     </section>
 
-    <!-- NOVA ABA TÉCNICO -->
-    <section id="tab-tecnico" class="tab-content hidden">
-        <!-- Momentum Section -->
+    <!-- TAB TÉCNICO -->
+    <section id="tab-tecnico" class="tab-content">
         <div class="card-pro mb-4">
-            <h3 class="text-[11px] font-black text-purple-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Momentum & Força</h3>
+            <h3 class="text-[11px] font-black text-purple-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Momentum</h3>
             
             <div class="tech-grid">
-                <!-- RSI -->
                 <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-[10px] font-black text-gray-400 uppercase">RSI (14)</h4>
-                        <span id="rsi-status" class="status-badge status-fear">● Sobrevendido</span>
-                    </div>
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">RSI (14)</h4>
                     <div class="flex items-end gap-2 mb-2">
                         <span id="rsi-valor" class="text-2xl font-black mono text-yellow-500">32.4</span>
-                        <span class="text-[9px] text-gray-500 mb-1">pontos</span>
                     </div>
                     <div class="relative h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
-                        <div class="absolute left-[30%] right-[30%] h-full bg-yellow-500/20"></div>
-                        <div id="rsi-bar" class="absolute left-0 h-full bg-yellow-500 rounded-full transition-all duration-1000" style="width: 32.4%"></div>
-                        <div class="absolute left-[30%] h-full w-0.5 bg-gray-600"></div>
-                        <div class="absolute right-[30%] h-full w-0.5 bg-gray-600"></div>
+                        <div id="rsi-bar" class="absolute left-0 h-full bg-yellow-500 rounded-full transition-all" style="width: 32%"></div>
                     </div>
-                    <p id="rsi-desc" class="text-[10px] text-gray-500 leading-snug">RSI abaixo de 40 indica condição de sobrevenda. Divergência bullish formando no 4H.</p>
+                    <p id="rsi-desc" class="text-[10px] text-gray-500">Sobrevendido</p>
                 </div>
 
-                <!-- MACD -->
                 <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-[10px] font-black text-gray-400 uppercase">MACD</h4>
-                        <span id="macd-status" class="status-badge status-neutral">● Convergência</span>
-                    </div>
-                    <div class="space-y-1 mb-2">
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">MACD</h4>
+                    <div class="space-y-1">
                         <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-500">Linha:</span>
-                            <span id="macd-linha" class="mono text-blue-400">-142.5</span>
-                        </div>
-                        <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-500">Sinal:</span>
-                            <span id="macd-sinal" class="mono text-red-400">-189.3</span>
-                        </div>
-                        <div class="flex justify-between text-[10px] font-bold border-t border-white/10 pt-1 mt-1">
-                            <span class="text-gray-400">Histograma:</span>
-                            <span id="macd-hist" class="mono text-green-500">+46.8 ↑</span>
+                            <span class="text-gray-500">Hist:</span>
+                            <span id="macd-hist" class="mono text-green-500">+46.8</span>
                         </div>
                     </div>
-                    <p id="macd-desc" class="text-[10px] text-gray-500 leading-snug">Histograma positivo sugere perda de momentum vendedor. Possível cruzamento bullish próximo.</p>
+                    <p id="macd-desc" class="text-[10px] text-gray-500 mt-2">Convergência bullish</p>
                 </div>
             </div>
         </div>
 
-        <!-- Tendência Section -->
         <div class="card-pro mb-4">
-            <h3 class="text-[11px] font-black text-green-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Tendência & Médias</h3>
+            <h3 class="text-[11px] font-black text-green-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Tendência</h3>
             
-            <!-- Médias Móveis -->
             <div class="space-y-3 mb-4">
-                <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg border border-white/5">
+                <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg">
                     <div class="flex items-center gap-3">
                         <div class="w-2 h-8 bg-yellow-500 rounded-full"></div>
                         <div>
-                            <div class="text-[10px] text-gray-500 uppercase font-bold">MA 20 (Curta)</div>
-                            <div id="ma20-valor" class="text-sm font-black mono text-white">$71,240</div>
+                            <div class="text-[10px] text-gray-500 uppercase font-bold">MA 20</div>
+                            <div class="text-sm font-black mono text-white">$71,240</div>
                         </div>
                     </div>
-                    <div id="ma20-trend" class="text-[9px] font-bold text-red-500 uppercase">▼ Abaixo</div>
+                    <div class="text-[9px] font-bold text-red-500 uppercase">▼ Abaixo</div>
                 </div>
                 
-                <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg border border-white/5">
+                <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg">
                     <div class="flex items-center gap-3">
                         <div class="w-2 h-8 bg-blue-500 rounded-full"></div>
                         <div>
-                            <div class="text-[10px] text-gray-500 uppercase font-bold">MA 50 (Média)</div>
-                            <div id="ma50-valor" class="text-sm font-black mono text-white">$68,450</div>
+                            <div class="text-[10px] text-gray-500 uppercase font-bold">MA 50</div>
+                            <div class="text-sm font-black mono text-white">$68,450</div>
                         </div>
                     </div>
-                    <div id="ma50-trend" class="text-[9px] font-bold text-green-500 uppercase">▼ Acima</div>
-                </div>
-                
-                <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg border border-white/5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-8 bg-purple-500 rounded-full"></div>
-                        <div>
-                            <div class="text-[10px] text-gray-500 uppercase font-bold">MA 200 (Longa)</div>
-                            <div id="ma200-valor" class="text-sm font-black mono text-white">$52,180</div>
-                        </div>
-                    </div>
-                    <div id="ma200-trend" class="text-[9px] font-bold text-green-500 uppercase">▼ Muito Acima</div>
-                </div>
-            </div>
-
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-                <p id="ma-analise" class="text-[10px] text-gray-400 leading-relaxed">
-                    <span class="text-red-500 font-bold">Estrutura de baixa no curto prazo:</span> Preço abaixo da MA20, mas segurando firmemente acima da MA50. 
-                    A MA200 distante em $52k indica tendência macro intacta. <b>Watch:</b> Recuperação da MA20 para sinal de reversão.
-                </p>
-            </div>
-        </div>
-
-        <!-- Volatilidade Section -->
-        <div class="card-pro mb-4">
-            <h3 class="text-[11px] font-black text-orange-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Volatilidade & Canais</h3>
-            
-            <div class="tech-grid">
-                <!-- Bollinger Bands -->
-                <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <h4 class="text-[10px] font-black text-gray-400 uppercase mb-3">Bollinger Bands (20,2)</h4>
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-gray-500">Superior:</span>
-                            <span id="bb-superior" class="mono text-gray-300">$74,850</span>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px] font-bold bg-white/5 p-2 rounded">
-                            <span class="text-blue-400">Preço:</span>
-                            <span id="bb-preco" class="mono text-white">$69,828</span>
-                        </div>
-                        <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-gray-500">Inferior:</span>
-                            <span id="bb-inferior" class="mono text-gray-300">$67,630</span>
-                        </div>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-white/5">
-                        <div class="flex justify-between text-[9px] mb-1">
-                            <span class="text-gray-500">Largura da banda:</span>
-                            <span id="bb-largura" class="text-orange-400 font-bold">10.3%</span>
-                        </div>
-                        <p id="bb-desc" class="text-[9px] text-gray-500 mt-1">Preço tocando a banda inferior. Squeeze em formação.</p>
-                    </div>
-                </div>
-
-                <!-- ATR -->
-                <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <h4 class="text-[10px] font-black text-gray-400 uppercase mb-3">ATR (14)</h4>
-                    <div class="flex items-end gap-2 mb-3">
-                        <span id="atr-valor" class="text-2xl font-black mono text-orange-500">$1,840</span>
-                        <span class="text-[9px] text-gray-500 mb-1">volatilidade</span>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-500">Range Médio:</span>
-                            <span class="mono text-gray-300">2.64%</span>
-                        </div>
-                        <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-500">Expansão:</span>
-                            <span id="atr-expansao" class="text-red-500 font-bold">+15% ↗</span>
-                        </div>
-                    </div>
-                    <p id="atr-desc" class="text-[9px] text-gray-500 mt-3">Volatilidade crescente. Candles maiores indicam decisão próxima.</p>
+                    <div class="text-[9px] font-bold text-green-500 uppercase">▲ Acima</div>
                 </div>
             </div>
         </div>
 
-        <!-- Níveis Chave -->
         <div class="card-pro">
-            <h3 class="text-[11px] font-black text-blue-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Estrutura de Mercado</h3>
+            <h3 class="text-[11px] font-black text-blue-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Níveis</h3>
             
-            <!-- Fibonacci -->
-            <div class="mb-4">
-                <h4 class="text-[10px] font-bold text-gray-500 uppercase mb-2">Retração de Fibonacci (ATH → Mínima)</h4>
-                <div id="fib-levels" class="space-y-1">
-                    <div class="fib-level fib-active">
-                        <span class="text-[10px] text-gray-400">0.236</span>
-                        <span class="text-[11px] font-bold mono text-white">$69,200</span>
-                        <span class="text-[9px] text-green-500">● Suporte</span>
-                    </div>
-                    <div class="fib-level">
-                        <span class="text-[10px] text-gray-400">0.382</span>
-                        <span class="text-[11px] font-bold mono text-gray-300">$66,800</span>
-                        <span class="text-[9px] text-gray-600">Alvo</span>
-                    </div>
-                    <div class="fib-level">
-                        <span class="text-[10px] text-gray-400">0.5</span>
-                        <span class="text-[11px] font-bold mono text-gray-300">$64,500</span>
-                        <span class="text-[9px] text-gray-600">Alvo</span>
-                    </div>
-                    <div class="fib-level">
-                        <span class="text-[10px] text-gray-400">0.618</span>
-                        <span class="text-[11px] font-bold mono text-gray-300">$62,100</span>
-                        <span class="text-[9px] text-yellow-500">Golden</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Suportes e Resistências -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
                     <h4 class="text-[9px] font-black text-red-500 uppercase mb-2">Resistências</h4>
                     <div class="space-y-1">
-                        <div class="flex justify-between items-center">
+                        <div class="flex justify-between">
                             <span class="text-[10px] text-gray-400">R1</span>
                             <span class="text-[11px] font-bold mono text-gray-300">$70,500</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-gray-400">R2</span>
-                            <span class="text-[11px] font-bold mono text-gray-300">$71,800</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-1 mt-1">
+                        <div class="flex justify-between border-t border-white/10 pt-1">
                             <span class="text-[10px] text-red-400 font-bold">Key</span>
                             <span class="text-[11px] font-black mono text-white">$73,800</span>
                         </div>
@@ -539,45 +418,22 @@
                 <div class="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
                     <h4 class="text-[9px] font-black text-green-500 uppercase mb-2">Suportes</h4>
                     <div class="space-y-1">
-                        <div class="flex justify-between items-center">
+                        <div class="flex justify-between">
                             <span class="text-[10px] text-gray-400">S1</span>
                             <span class="text-[11px] font-bold mono text-gray-300">$68,900</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-gray-400">S2</span>
-                            <span class="text-[11px] font-bold mono text-gray-300">$67,200</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-1 mt-1">
+                        <div class="flex justify-between border-t border-white/10 pt-1">
                             <span class="text-[10px] text-green-400 font-bold">Key</span>
                             <span class="text-[11px] font-black mono text-white">$65,500</span>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Análise de Volume -->
-            <div class="mt-4 bg-white/[0.02] rounded-lg p-3 border border-white/5">
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="text-[10px] font-black text-gray-400 uppercase">Perfil de Volume</h4>
-                    <span id="vol-trend" class="text-[9px] font-bold text-red-500">▼ Descendente</span>
-                </div>
-                <div class="flex items-end gap-1 h-12 mb-2" id="vol-bars">
-                    <div class="flex-1 bg-red-500/30 rounded-t" style="height: 80%"></div>
-                    <div class="flex-1 bg-red-500/40 rounded-t" style="height: 60%"></div>
-                    <div class="flex-1 bg-red-500/20 rounded-t" style="height: 40%"></div>
-                    <div class="flex-1 bg-yellow-500/40 rounded-t" style="height: 50%"></div>
-                    <div class="flex-1 bg-green-500/30 rounded-t" style="height: 30%"></div>
-                    <div class="flex-1 bg-green-500/20 rounded-t" style="height: 25%"></div>
-                </div>
-                <p id="vol-analise" class="text-[9px] text-gray-500">
-                    Volume diminuindo em queda = <span class="text-green-400">exaustão vendedora</span>. 
-                    Último candle com volume 40% abaixo da média.
-                </p>
-            </div>
         </div>
     </section>
 
-    <section id="tab-miner" class="tab-content hidden">
+    <!-- TAB MINERADORES -->
+    <section id="tab-miner" class="tab-content">
         <div class="card-pro space-y-6">
             <h3 class="text-[11px] font-black text-yellow-500 uppercase tracking-widest">Saúde dos Mineradores</h3>
             <div>
@@ -586,25 +442,22 @@
                     <span class="text-lg font-black mono text-yellow-500">0.48</span>
                 </div>
                 <div class="gauge-bg"><div class="gauge-fill bg-yellow-500" style="width: 48%"></div></div>
-                <p class="text-[10px] text-gray-500 mt-3 uppercase font-medium">Zona de Estresse Máximo: Mineradores estão operando no prejuízo. Historicamente, isso marca o fundo do poço do ciclo.</p>
-            </div>
-            <div class="bg-black/50 p-4 rounded-xl border border-white/5">
-                <p class="text-[10px] font-black text-blue-400 uppercase mb-2 italic">Análise de Hashrate</p>
-                <p class="text-[11px] text-gray-400">Mesmo com preço baixo, o Hashrate continua em máxima histórica. A rede está mais segura do que nunca, indicando confiança institucional de longo prazo.</p>
+                <p class="text-[10px] text-gray-500 mt-3 uppercase font-medium">Zona de Estresse Máximo</p>
             </div>
         </div>
     </section>
 
-    <section id="tab-hist" class="tab-content hidden">
+    <!-- TAB HISTÓRICO -->
+    <section id="tab-hist" class="tab-content">
         <div class="card-pro space-y-6">
             <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Memória de Ciclos</h3>
             <div class="border-l-2 border-blue-500 pl-4">
-                <h4 class="text-xs font-black text-white uppercase">Analogia 2018 (Capitulação)</h4>
-                <p class="text-[11px] text-gray-500 mt-1 italic">O cenário atual é idêntico ao fim de 2018. Volume de venda "secando" em níveis baixos, preparando o terreno para uma reversão lenta e sólida.</p>
+                <h4 class="text-xs font-black text-white uppercase">Analogia 2018</h4>
+                <p class="text-[11px] text-gray-500 mt-1 italic">Cenário idêntico ao fim de 2018. Volume secando.</p>
             </div>
             <div class="border-l-2 border-green-500 pl-4">
-                <h4 class="text-xs font-black text-white uppercase">Tendência 2020 (V-Shape)</h4>
-                <p class="text-[11px] text-gray-500 mt-1 italic">Diferente de 2018, em 2020 a recuperação foi rápida. O que decidirá agora é a velocidade com que as baleias retirarem o BTC das exchanges (Netflow Negativo).</p>
+                <h4 class="text-xs font-black text-white uppercase">Tendência 2020</h4>
+                <p class="text-[11px] text-gray-500 mt-1 italic">Recuperação em V-shape depende do netflow.</p>
             </div>
         </div>
     </section>
@@ -612,788 +465,166 @@
 </main>
 
 <script>
-    // --- SISTEMA DE HASH (IDENTIFICAÇÃO DE FOTOS IGUAIS) ---
+    // --- VARIÁVEIS GLOBAIS ---
     let hashes = { chart: null, onchain: null };
-    let onchainData = null;
-    let technicalData = null;
+    let wsConnection = null;
+    let lastPrice = 0;
 
-    function handleFileChange(input, imgId, labelId, type) {
-        if (input.files && input.files[0]) {
-            const f = input.files[0];
-            hashes[type] = `${f.name}-${f.size}-${f.lastModified}`;
+    // --- NAVEGAÇÃO DAS ABAS ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tabId = this.getAttribute('data-tab');
             
-            const r = new FileReader();
-            r.onload = (e) => {
-                document.getElementById(imgId).src = e.target.result;
-                document.getElementById(imgId).classList.remove('hidden');
-                document.getElementById(labelId).classList.add('hidden');
+            // Remove active de todos
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Adiciona active no clicado
+            this.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        });
+    });
+
+    // --- UPLOAD DE ARQUIVOS ---
+    function handleFile(input, imgId, labelId, type) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            hashes[type] = `${file.name}-${file.size}-${file.lastModified}`;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById(imgId);
+                const label = document.getElementById(labelId);
                 
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                label.classList.add('hidden');
+                
+                // Efeito scan para onchain
                 if (type === 'onchain') {
-                    const scanEffect = document.getElementById('scan-effect');
-                    scanEffect.classList.remove('hidden');
-                    setTimeout(() => scanEffect.classList.add('hidden'), 2000);
-                    setTimeout(() => extrairDadosOnChain(), 500);
-                } else if (type === 'chart') {
-                    // Simular extração de dados técnicos do gráfico
-                    setTimeout(() => extrairDadosTecnicos(), 500);
+                    const scan = document.getElementById('scan-effect');
+                    scan.classList.remove('hidden');
+                    setTimeout(() => scan.classList.add('hidden'), 2000);
+                    
+                    // Simula extração
+                    setTimeout(() => {
+                        mostrarOnChain();
+                    }, 800);
                 }
                 
-                document.getElementById('sync-status').innerText = "Carregado";
-                document.getElementById('sync-status').classList.replace('bg-gray-800', 'bg-blue-900');
+                // Atualiza status
+                const status = document.getElementById('sync-status');
+                status.innerText = type === 'onchain' ? 'On-Chain OK' : 'Gráfico OK';
+                status.classList.remove('bg-gray-800');
+                status.classList.add(type === 'onchain' ? 'bg-green-900' : 'bg-purple-900');
+                status.style.color = type === 'onchain' ? '#10b981' : '#a855f7';
             };
-            r.readAsDataURL(f);
+            reader.readAsDataURL(file);
         }
     }
 
-    function extrairDadosOnChain() {
-        onchainData = {
-            sopr: 0.94,
-            netflow: -2450,
-            fundingRate: -0.015,
-            timestamp: new Date().toISOString()
-        };
-        atualizarIndicadoresUI();
-        
-        const status = document.getElementById('sync-status');
-        status.innerText = "Dados On-Chain Decodificados";
-        status.classList.replace('bg-blue-900', 'bg-green-900');
-        status.style.color = '#10b981';
-    }
-
-    function extrairDadosTecnicos() {
-        // Simulando dados técnicos extraídos do gráfico
-        technicalData = {
-            rsi: 32.4,
-            macd: { linha: -142.5, sinal: -189.3, histograma: 46.8 },
-            ma20: 71240,
-            ma50: 68450,
-            ma200: 52180,
-            bb: { superior: 74850, inferior: 67630, preco: 69828 },
-            atr: 1840,
-            fib: { atual: 0.236, niveis: [69200, 66800, 64500, 62100] },
-            volume: { tendencia: 'descendente', ultimo: 0.4 }
-        };
-        
-        atualizarIndicadoresTecnicos();
-        
-        const status = document.getElementById('sync-status');
-        status.innerText = "Análise Técnica Completa";
-        status.classList.replace('bg-gray-800', 'bg-purple-900');
-        status.style.color = '#a855f7';
-    }
-
-    function atualizarIndicadoresUI() {
-        if (!onchainData) return;
+    // --- MOSTRAR DADOS ON-CHAIN ---
+    function mostrarOnChain() {
         document.getElementById('indicadores-vazio').classList.add('hidden');
         document.getElementById('indicadores-dinamicos').classList.remove('hidden');
-        
-        const sopr = onchainData.sopr;
-        document.getElementById('sopr-valor').innerText = sopr.toFixed(2);
-        document.getElementById('sopr-valor').className = `indicator-value ${sopr < 1.0 ? 'text-red-500' : sopr > 1.05 ? 'text-green-500' : 'text-yellow-500'}`;
-        
-        if (sopr < 0.98) {
-            document.getElementById('sopr-status').className = 'status-badge status-extreme-fear';
-            document.getElementById('sopr-status').innerText = '● Capitulação Extrema';
-            document.getElementById('sopr-desc').innerHTML = `Valor <b>${sopr.toFixed(2)}</b> está profundamente abaixo de 1.0. Investidores estão vendendo com prejuímantida como estava) -->
-    <section id="tab-detalhes" class="tab-content hidden">
-        <div class="card-pro space-y-8">
-            <h3 class="text-[11px] font-black text-blue-400 uppercase tracking-widest border-b border-white/5 pb-2">Enciclopédia On-Chain</h3>
-            
-            <div id="indicadores-dinamicos" class="space-y-6 hidden">
-                <div id="sopr-container" class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-xs font-black text-white uppercase">SOPR (Taxa de Lucro Gastos)</h4>
-                        <span id="sopr-status" class="status-badge status-extreme-fear">● Capitulação Extrema</span>
-                    </div>
-                    <div id="sopr-valor" class="indicator-value text-red-500">0.94</div>
-                    <p id="sopr-desc" class="text-[11px] text-gray-400 leading-relaxed">
-                        Valor abaixo de 1.0 confirma que investidores estão realizando prejuízo. 
-                        O medo dominou o mercado. Este é um sinal clássico de fundo de ciclo.
-                    </p>
-                    <div class="mt-3 flex items-center gap-2">
-                        <div class="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div id="sopr-bar" class="h-full bg-red-500 rounded-full" style="width: 30%"></div>
-                        </div>
-                        <span class="text-[8px] text-gray-600 uppercase font-bold">Nível de Medo</span>
-                    </div>
-                </div>
-
-                <div id="netflow-container" class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-xs font-black text-white uppercase">Netflow das Exchanges</h4>
-                        <span id="netflow-status" class="status-badge status-greed">● Pressão Vendedora Esgotada</span>
-                    </div>
-                    <div id="netflow-valor" class="indicator-value text-green-500">-2,450 BTC</div>
-                    <p id="netflow-desc" class="text-[11px] text-gray-400 leading-relaxed">
-                        Fluxo negativo massivo indica retirada de BTC das corretoras. 
-                        As linhas de entrada estão em exaustão. Sem pressão vendedora ativa.
-                    </p>
-                    <div class="mt-3 flex items-center gap-2">
-                        <div class="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div id="netflow-bar" class="h-full bg-green-500 rounded-full" style="width: 85%"></div>
-                        </div>
-                        <span class="text-[8px] text-gray-600 uppercase font-bold">Absorção</span>
-                    </div>
-                </div>
-
-                <div id="funding-container" class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-xs font-black text-white uppercase">Funding Rates</h4>
-                        <span id="funding-status" class="status-badge status-fear">● Pessimismo Extremo</span>
-                    </div>
-                    <div id="funding-valor" class="indicator-value text-yellow-500">-0.015%</div>
-                    <p id="funding-desc" class="text-[11px] text-gray-400 leading-relaxed">
-                        Taxas negativas mostram que shorts estão pagando longs. 
-                        O mercado está excessivamente apostado na queda. Risco de Short Squeeze iminente.
-                    </p>
-                    <div class="mt-3 flex items-center gap-2">
-                        <div class="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div id="funding-bar" class="h-full bg-yellow-500 rounded-full" style="width: 20%"></div>
-                        </div>
-                        <span class="text-[8px] text-gray-600 uppercase font-bold">Squeeze Potencial</span>
-                    </div>
-                </div>
-            </div>
-
-            <div id="indicadores-vazio" class="text-center py-8">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-900 flex items-center justify-center">
-                    <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <p class="text-[11px] text-gray-500">Nenhum dado on-chain detectado.</p>
-                <p class="text-[10px] text-gray-600 mt-1">Faça upload do print na aba Terminal.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- NOVA ABA TÉCNICO -->
-    <section id="tab-tecnico" class="tab-content hidden">
-        <!-- Momentum Section -->
-        <div class="card-pro mb-4">
-            <h3 class="text-[11px] font-black text-purple-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Momentum & Força</h3>
-            
-            <div class="tech-grid">
-                <!-- RSI -->
-                <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-[10px] font-black text-gray-400 uppercase">RSI (14)</h4>
-                        <span id="rsi-status" class="status-badge status-fear">● Sobrevendido</span>
-                    </div>
-                    <div class="flex items-end gap-2 mb-2">
-                        <span id="rsi-valor" class="text-2xl font-black mono text-yellow-500">32.4</span>
-                        <span class="text-[9px] text-gray-500 mb-1">pontos</span>
-                    </div>
-                    <div class="relative h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
-                        <div class="absolute left-[30%] right-[30%] h-full bg-yellow-500/20"></div>
-                        <div id="rsi-bar" class="absolute left-0 h-full bg-yellow-500 rounded-full transition-all duration-1000" style="width: 32.4%"></div>
-                        <div class="absolute left-[30%] h-full w-0.5 bg-gray-600"></div>
-                        <div class="absolute right-[30%] h-full w-0.5 bg-gray-600"></div>
-                    </div>
-                    <p id="rsi-desc" class="text-[10px] text-gray-500 leading-snug">RSI abaixo de 40 indica condição de sobrevenda. Divergência bullish formando no 4H.</p>
-                </div>
-
-                <!-- MACD -->
-                <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-[10px] font-black text-gray-400 uppercase">MACD</h4>
-                        <span id="macd-status" class="status-badge status-neutral">● Convergência</span>
-                    </div>
-                    <div class="space-y-1 mb-2">
-                        <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-500">Linha:</span>
-                            <span id="macd-linha" class="mono text-blue-400">-142.5</span>
-                        </div>
-                        <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-500">Sinal:</span>
-                            <span id="macd-sinal" class="mono text-red-400">-189.3</span>
-                        </div>
-                        <div class="flex justify-between text-[10px] font-bold border-t border-white/10 pt-1 mt-1">
-                            <span class="text-gray-400">Histograma:</span>
-                            <span id="macd-hist" class="mono text-green-500">+46.8 ↑</span>
-                        </div>
-                    </div>
-                    <p id="macd-desc" class="text-[10px] text-gray-500 leading-snug">Histograma positivo sugere perda de momentum vendedor. Possível cruzamento bullish próximo.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tendência Section -->
-        <div class="card-pro mb-4">
-            <h3 class="text-[11px] font-black text-green-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Tendência & Médias</h3>
-            
-            <!-- Médias Móveis -->
-            <div class="space-y-3 mb-4">
-                <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg border border-white/5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-8 bg-yellow-500 rounded-full"></div>
-                        <div>
-                            <div class="text-[10px] text-gray-500 uppercase font-bold">MA 20 (Curta)</div>
-                            <div id="ma20-valor" class="text-sm font-black mono text-white">$71,240</div>
-                        </div>
-                    </div>
-                    <div id="ma20-trend" class="text-[9px] font-bold text-red-500 uppercase">▼ Abaixo</div>
-                </div>
-                
-                <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg border border-white/5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-8 bg-blue-500 rounded-full"></div>
-                        <div>
-                            <div class="text-[10px] text-gray-500 uppercase font-bold">MA 50 (Média)</div>
-                            <div id="ma50-valor" class="text-sm font-black mono text-white">$68,450</div>
-                        </div>
-                    </div>
-                    <div id="ma50-trend" class="text-[9px] font-bold text-green-500 uppercase">▼ Acima</div>
-                </div>
-                
-                <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg border border-white/5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-8 bg-purple-500 rounded-full"></div>
-                        <div>
-                            <div class="text-[10px] text-gray-500 uppercase font-bold">MA 200 (Longa)</div>
-                            <div id="ma200-valor" class="text-sm font-black mono text-white">$52,180</div>
-                        </div>
-                    </div>
-                    <div id="ma200-trend" class="text-[9px] font-bold text-green-500 uppercase">▼ Muito Acima</div>
-                </div>
-            </div>
-
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-                <p id="ma-analise" class="text-[10px] text-gray-400 leading-relaxed">
-                    <span class="text-red-500 font-bold">Estrutura de baixa no curto prazo:</span> Preço abaixo da MA20, mas segurando firmemente acima da MA50. 
-                    A MA200 distante em $52k indica tendência macro intacta. <b>Watch:</b> Recuperação da MA20 para sinal de reversão.
-                </p>
-            </div>
-        </div>
-
-        <!-- Volatilidade Section -->
-        <div class="card-pro mb-4">
-            <h3 class="text-[11px] font-black text-orange-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Volatilidade & Canais</h3>
-            
-            <div class="tech-grid">
-                <!-- Bollinger Bands -->
-                <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <h4 class="text-[10px] font-black text-gray-400 uppercase mb-3">Bollinger Bands (20,2)</h4>
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-gray-500">Superior:</span>
-                            <span id="bb-superior" class="mono text-gray-300">$74,850</span>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px] font-bold bg-white/5 p-2 rounded">
-                            <span class="text-blue-400">Preço:</span>
-                            <span id="bb-preco" class="mono text-white">$69,828</span>
-                        </div>
-                        <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-gray-500">Inferior:</span>
-                            <span id="bb-inferior" class="mono text-gray-300">$67,630</span>
-                        </div>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-white/5">
-                        <div class="flex justify-between text-[9px] mb-1">
-                            <span class="text-gray-500">Largura da banda:</span>
-                            <span id="bb-largura" class="text-orange-400 font-bold">10.3%</span>
-                        </div>
-                        <p id="bb-desc" class="text-[9px] text-gray-500 mt-1">Preço tocando a banda inferior. Squeeze em formação.</p>
-                    </div>
-                </div>
-
-                <!-- ATR -->
-                <div class="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-                    <h4 class="text-[10px] font-black text-gray-400 uppercase mb-3">ATR (14)</h4>
-                    <div class="flex items-end gap-2 mb-3">
-                        <span id="atr-valor" class="text-2xl font-black mono text-orange-500">$1,840</span>
-                        <span class="text-[9px] text-gray-500 mb-1">volatilidade</span>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-500">Range Médio:</span>
-                            <span class="mono text-gray-300">2.64%</span>
-                        </div>
-                        <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-500">Expansão:</span>
-                            <span id="atr-expansao" class="text-red-500 font-bold">+15% ↗</span>
-                        </div>
-                    </div>
-                    <p id="atr-desc" class="text-[9px] text-gray-500 mt-3">Volatilidade crescente. Candles maiores indicam decisão próxima.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Níveis Chave -->
-        <div class="card-pro">
-            <h3 class="text-[11px] font-black text-blue-400 uppercase tracking-widest border-b border-white/5 pb-2 mb-4">Estrutura de Mercado</h3>
-            
-            <!-- Fibonacci -->
-            <div class="mb-4">
-                <h4 class="text-[10px] font-bold text-gray-500 uppercase mb-2">Retração de Fibonacci (ATH → Mínima)</h4>
-                <div id="fib-levels" class="space-y-1">
-                    <div class="fib-level fib-active">
-                        <span class="text-[10px] text-gray-400">0.236</span>
-                        <span class="text-[11px] font-bold mono text-white">$69,200</span>
-                        <span class="text-[9px] text-green-500">● Suporte</span>
-                    </div>
-                    <div class="fib-level">
-                        <span class="text-[10px] text-gray-400">0.382</span>
-                        <span class="text-[11px] font-bold mono text-gray-300">$66,800</span>
-                        <span class="text-[9px] text-gray-600">Alvo</span>
-                    </div>
-                    <div class="fib-level">
-                        <span class="text-[10px] text-gray-400">0.5</span>
-                        <span class="text-[11px] font-bold mono text-gray-300">$64,500</span>
-                        <span class="text-[9px] text-gray-600">Alvo</span>
-                    </div>
-                    <div class="fib-level">
-                        <span class="text-[10px] text-gray-400">0.618</span>
-                        <span class="text-[11px] font-bold mono text-gray-300">$62,100</span>
-                        <span class="text-[9px] text-yellow-500">Golden</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Suportes e Resistências -->
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
-                    <h4 class="text-[9px] font-black text-red-500 uppercase mb-2">Resistências</h4>
-                    <div class="space-y-1">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-gray-400">R1</span>
-                            <span class="text-[11px] font-bold mono text-gray-300">$70,500</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-gray-400">R2</span>
-                            <span class="text-[11px] font-bold mono text-gray-300">$71,800</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-1 mt-1">
-                            <span class="text-[10px] text-red-400 font-bold">Key</span>
-                            <span class="text-[11px] font-black mono text-white">$73,800</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
-                    <h4 class="text-[9px] font-black text-green-500 uppercase mb-2">Suportes</h4>
-                    <div class="space-y-1">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-gray-400">S1</span>
-                            <span class="text-[11px] font-bold mono text-gray-300">$68,900</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-gray-400">S2</span>
-                            <span class="text-[11px] font-bold mono text-gray-300">$67,200</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-1 mt-1">
-                            <span class="text-[10px] text-green-400 font-bold">Key</span>
-                            <span class="text-[11px] font-black mono text-white">$65,500</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Análise de Volume -->
-            <div class="mt-4 bg-white/[0.02] rounded-lg p-3 border border-white/5">
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="text-[10px] font-black text-gray-400 uppercase">Perfil de Volume</h4>
-                    <span id="vol-trend" class="text-[9px] font-bold text-red-500">▼ Descendente</span>
-                </div>
-                <div class="flex items-end gap-1 h-12 mb-2" id="vol-bars">
-                    <div class="flex-1 bg-red-500/30 rounded-t" style="height: 80%"></div>
-                    <div class="flex-1 bg-red-500/40 rounded-t" style="height: 60%"></div>
-                    <div class="flex-1 bg-red-500/20 rounded-t" style="height: 40%"></div>
-                    <div class="flex-1 bg-yellow-500/40 rounded-t" style="height: 50%"></div>
-                    <div class="flex-1 bg-green-500/30 rounded-t" style="height: 30%"></div>
-                    <div class="flex-1 bg-green-500/20 rounded-t" style="height: 25%"></div>
-                </div>
-                <p id="vol-analise" class="text-[9px] text-gray-500">
-                    Volume diminuindo em queda = <span class="text-green-400">exaustão vendedora</span>. 
-                    Último candle com volume 40% abaixo da média.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <section id="tab-miner" class="tab-content hidden">
-        <div class="card-pro space-y-6">
-            <h3 class="text-[11px] font-black text-yellow-500 uppercase tracking-widest">Saúde dos Mineradores</h3>
-            <div>
-                <div class="flex justify-between items-end mb-2">
-                    <span class="text-xs font-bold text-gray-400 uppercase italic">Puell Multiple</span>
-                    <span class="text-lg font-black mono text-yellow-500">0.48</span>
-                </div>
-                <div class="gauge-bg"><div class="gauge-fill bg-yellow-500" style="width: 48%"></div></div>
-                <p class="text-[10px] text-gray-500 mt-3 uppercase font-medium">Zona de Estresse Máximo: Mineradores estão operando no prejuízo. Historicamente, isso marca o fundo do poço do ciclo.</p>
-            </div>
-            <div class="bg-black/50 p-4 rounded-xl border border-white/5">
-                <p class="text-[10px] font-black text-blue-400 uppercase mb-2 italic">Análise de Hashrate</p>
-                <p class="text-[11px] text-gray-400">Mesmo com preço baixo, o Hashrate continua em máxima histórica. A rede está mais segura do que nunca, indicando confiança institucional de longo prazo.</p>
-            </div>
-        </div>
-    </section>
-
-    <section id="tab-hist" class="tab-content hidden">
-        <div class="card-pro space-y-6">
-            <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Memória de Ciclos</h3>
-            <div class="border-l-2 border-blue-500 pl-4">
-                <h4 class="text-xs font-black text-white uppercase">Analogia 2018 (Capitulação)</h4>
-                <p class="text-[11px] text-gray-500 mt-1 italic">O cenário atual é idêntico ao fim de 2018. Volume de venda "secando" em níveis baixos, preparando o terreno para uma reversão lenta e sólida.</p>
-            </div>
-            <div class="border-l-2 border-green-500 pl-4">
-                <h4 class="text-xs font-black text-white uppercase">Tendência 2020 (V-Shape)</h4>
-                <p class="text-[11px] text-gray-500 mt-1 italic">Diferente de 2018, em 2020 a recuperação foi rápida. O que decidirá agora é a velocidade com que as baleias retirarem o BTC das exchanges (Netflow Negativo).</p>
-            </div>
-        </div>
-    </section>
-
-</main>
-
-<script>
-    // --- SISTEMA DE HASH (IDENTIFICAÇÃO DE FOTOS IGUAIS) ---
-    let hashes = { chart: null, onchain: null };
-    let onchainData = null;
-    let technicalData = null;
-
-    function handleFileChange(input, imgId, labelId, type) {
-        if (input.files && input.files[0]) {
-            const f = input.files[0];
-            hashes[type] = `${f.name}-${f.size}-${f.lastModified}`;
-            
-            const r = new FileReader();
-            r.onload = (e) => {
-                document.getElementById(imgId).src = e.target.result;
-                document.getElementById(imgId).classList.remove('hidden');
-                document.getElementById(labelId).classList.add('hidden');
-                
-                if (type === 'onchain') {
-                    const scanEffect = document.getElementById('scan-effect');
-                    scanEffect.classList.remove('hidden');
-                    setTimeout(() => scanEffect.classList.add('hidden'), 2000);
-                    setTimeout(() => extrairDadosOnChain(), 500);
-                } else if (type === 'chart') {
-                    // Simular extração de dados técnicos do gráfico
-                    setTimeout(() => extrairDadosTecnicos(), 500);
-                }
-                
-                document.getElementById('sync-status').innerText = "Carregado";
-                document.getElementById('sync-status').classList.replace('bg-gray-800', 'bg-blue-900');
-            };
-            r.readAsDataURL(f);
-        }
     }
 
-    function extrairDadosOnChain() {
-        onchainData = {
-            sopr: 0.94,
-            netflow: -2450,
-            fundingRate: -0.015,
-            timestamp: new Date().toISOString()
-        };
-        atualizarIndicadoresUI();
-        
-        const status = document.getElementById('sync-status');
-        status.innerText = "Dados On-Chain Decodificados";
-        status.classList.replace('bg-blue-900', 'bg-green-900');
-        status.style.color = '#10b981';
-    }
-
-    function extrairDadosTecnicos() {
-        // Simulando dados técnicos extraídos do gráfico
-        technicalData = {
-            rsi: 32.4,
-            macd: { linha: -142.5, sinal: -189.3, histograma: 46.8 },
-            ma20: 71240,
-            ma50: 68450,
-            ma200: 52180,
-            bb: { superior: 74850, inferior: 67630, preco: 69828 },
-            atr: 1840,
-            fib: { atual: 0.236, niveis: [69200, 66800, 64500, 62100] },
-            volume: { tendencia: 'descendente', ultimo: 0.4 }
-        };
-        
-        atualizarIndicadoresTecnicos();
-        
-        const status = document.getElementById('sync-status');
-        status.innerText = "Análise Técnica Completa";
-        status.classList.replace('bg-gray-800', 'bg-purple-900');
-        status.style.color = '#a855f7';
-    }
-
-    function atualizarIndicadoresUI() {
-        if (!onchainData) return;
-        document.getElementById('indicadores-vazio').classList.add('hidden');
-        document.getElementById('indicadores-dinamicos').classList.remove('hidden');
-        
-        const sopr = onchainData.sopr;
-        document.getElementById('sopr-valor').innerText = sopr.toFixed(2);
-        document.getElementById('sopr-valor').className = `indicator-value ${sopr < 1.0 ? 'text-red-500' : sopr > 1.05 ? 'text-green-500' : 'text-yellow-500'}`;
-        
-        if (sopr < 0.98) {
-            document.getElementById('sopr-status').className = 'status-badge status-extreme-fear';
-            document.getElementById('sopr-status').innerText = '● Capitulação Extrema';
-            document.getElementById('sopr-desc').innerHTML = `Valor <b>${sopr.toFixed(2)}</b> está profundamente abaixo de 1.0. Investidores estão vendendo com prejuízo de <b>${((1-sopr)*100).toFixed(1)}%</b> em média. O medo irracional dominou o mercado. Este é o sinal clássico de fundo de ciclo.`;
-            document.getElementById('sopr-bar').className = 'h-full bg-red-500 rounded-full';
-            document.getElementById('sopr-bar').style.width = `${(1-sopr)*500}%`;
-        } else if (sopr < 1.0) {
-            document.getElementById('sopr-status').className = 'status-badge status-fear';
-            document.getElementById('sopr-status').innerText = '● Leve Capitulação';
-            document.getElementById('sopr-desc').innerHTML = `Valor <b>${sopr.toFixed(2)}</b> indica leve pressão vendedora. Alguns investidores estão aceitando prejuízos pequenos. Cenário de cautela, mas não extremo.`;
-            document.getElementById('sopr-bar').className = 'h-full bg-yellow-500 rounded-full';
-            document.getElementById('sopr-bar').style.width = '50%';
-        } else {
-            document.getElementById('sopr-status').className = 'status-badge status-greed';
-            document.getElementById('sopr-status').innerText = '● Lucro Realizado';
-            document.getElementById('sopr-desc').innerHTML = `Valor <b>${sopr.toFixed(2)}</b> indica que o mercado está vendendo com lucro. Cuidado com topos locais quando > 1.05.`;
-            document.getElementById('sopr-bar').className = 'h-full bg-green-500 rounded-full';
-            document.getElementById('sopr-bar').style.width = '80%';
-        }
-        
-        const netflow = onchainData.netflow;
-        document.getElementById('netflow-valor').innerText = `${netflow > 0 ? '+' : ''}${netflow.toLocaleString()} BTC`;
-        document.getElementById('netflow-valor').className = `indicator-value ${netflow < 0 ? 'text-green-500' : 'text-red-500'}`;
-        
-        if (netflow < -1000) {
-            document.getElementById('netflow-status').className = 'status-badge status-greed';
-            document.getElementById('netflow-status').innerText = '● Retirada Massiva (Bullish)';
-            document.getElementById('netflow-desc').innerHTML = `Fluxo de <b>${netflow.toLocaleString()} BTC</b> saindo das exchanges. As "linhas curtas" de entrada confirmam exaustão total da pressão vendedora. Baleias estão acumulando em cold wallets.`;
-            document.getElementById('netflow-bar').className = 'h-full bg-green-500 rounded-full';
-            document.getElementById('netflow-bar').style.width = '90%';
-        } else if (netflow < 0) {
-            document.getElementById('netflow-status').className = 'status-badge status-neutral';
-            document.getElementById('netflow-status').innerText = '● Retirada Moderada';
-            document.getElementById('netflow-desc').innerHTML = `Fluxo negativo de <b>${netflow.toLocaleString()} BTC</b>. Pressão vendedora diminuindo, mas não esgotada.`;
-            document.getElementById('netflow-bar').className = 'h-full bg-blue-500 rounded-full';
-            document.getElementById('netflow-bar').style.width = '60%';
-        } else {
-            document.getElementById('netflow-status').className = 'status-badge status-extreme-fear';
-            document.getElementById('netflow-status').innerText = '● Pressão Vendedora';
-            document.getElementById('netflow-desc').innerHTML = `Fluxo positivo de <b>+${netflow.toLocaleString()} BTC</b> entrando em exchanges. Alerta de possível venda iminente.`;
-            document.getElementById('netflow-bar').className = 'h-full bg-red-500 rounded-full';
-            document.getElementById('netflow-bar').style.width = '80%';
-        }
-        
-        const funding = onchainData.fundingRate;
-        document.getElementById('funding-valor').innerText = `${funding > 0 ? '+' : ''}${(funding*100).toFixed(3)}%`;
-        document.getElementById('funding-valor').className = `indicator-value ${funding < 0 ? 'text-yellow-500' : funding > 0.01 ? 'text-red-500' : 'text-green-500'}`;
-        
-        if (funding < -0.01) {
-            document.getElementById('funding-status').className = 'status-badge status-fear';
-            document.getElementById('funding-status').innerText = '● Short Squeeze Imminente';
-            document.getElementById('funding-desc').innerHTML = `Taxa negativa de <b>${(funding*100).toFixed(3)}%</b>. Traders estão pagando caro para manter posições vendidas. O mercado está excessivamente bearish. <b>Combustível perfeito para um short squeeze violento.</b>`;
-            document.getElementById('funding-bar').className = 'h-full bg-yellow-500 rounded-full';
-            document.getElementById('funding-bar').style.width = '95%';
-        } else if (funding < 0) {
-            document.getElementById('funding-status').className = 'status-badge status-neutral';
-            document.getElementById('funding-status').innerText = '● Leve Pessimismo';
-            document.getElementById('funding-desc').innerHTML = `Taxa levemente negativa (${(funding*100).toFixed(3)}%). Leve inclinação bearish, mas não extremo.`;
-            document.getElementById('funding-bar').className = 'h-full bg-blue-500 rounded-full';
-            document.getElementById('funding-bar').style.width = '40%';
-        } else if (funding > 0.01) {
-            document.getElementById('funding-status').className = 'status-badge status-extreme-fear';
-            document.getElementById('funding-status').innerText = '● Long Squeeze Risk';
-            document.getElementById('funding-desc').innerHTML = `Taxa alta de +${(funding*100).toFixed(3)}%. Longs pagando demais. Risco de liquidação de longs.`;
-            document.getElementById('funding-bar').className = 'h-full bg-red-500 rounded-full';
-            document.getElementById('funding-bar').style.width = '85%';
-        } else {
-            document.getElementById('funding-status').className = 'status-badge status-greed';
-            document.getElementById('funding-status').innerText = '● Equilibrado';
-            document.getElementById('funding-desc').innerHTML = `Taxa neutra (${(funding*100).toFixed(3)}%). Mercado equilibrado entre longs e shorts.`;
-            document.getElementById('funding-bar').className = 'h-full bg-green-500 rounded-full';
-            document.getElementById('funding-bar').style.width = '50%';
-        }
-    }
-
-    function atualizarIndicadoresTecnicos() {
-        if (!technicalData) return;
-        
-        const precoAtual = 69828; // Simulado do header
-        
-        // RSI
-        const rsi = technicalData.rsi;
-        document.getElementById('rsi-valor').innerText = rsi.toFixed(1);
-        document.getElementById('rsi-bar').style.width = `${rsi}%`;
-        
-        if (rsi < 30) {
-            document.getElementById('rsi-status').className = 'status-badge status-extreme-fear';
-            document.getElementById('rsi-status').innerText = '● Sobrevendido Extremo';
-            document.getElementById('rsi-valor').className = 'text-2xl font-black mono text-red-500';
-            document.getElementById('rsi-desc').innerHTML = `RSI em <b>${rsi}</b> indica condição extrema de sobrevenda. O mercado está exagerado na queda. <span class="text-green-400">Divergência bullish</span> sendo formada no timeframe de 4H.`;
-        } else if (rsi < 40) {
-            document.getElementById('rsi-status').className = 'status-badge status-fear';
-            document.getElementById('rsi-status').innerText = '● Sobrevendido';
-            document.getElementById('rsi-valor').className = 'text-2xl font-black mono text-yellow-500';
-            document.getElementById('rsi-desc').innerText = 'RSI abaixo de 40 indica condição de sobrevenda. Cautela, mas não extremo.';
-        } else if (rsi > 70) {
-            document.getElementById('rsi-status').className = 'status-badge status-greed';
-            document.getElementById('rsi-status').innerText = '● Sobrecomprado';
-            document.getElementById('rsi-valor').className = 'text-2xl font-black mono text-green-500';
-        } else {
-            document.getElementById('rsi-status').className = 'status-badge status-neutral';
-            document.getElementById('rsi-status').innerText = '● Zona Neutra';
-            document.getElementById('rsi-valor').className = 'text-2xl font-black mono text-blue-500';
-        }
-
-        // MACD
-        const macd = technicalData.macd;
-        document.getElementById('macd-linha').innerText = macd.linha.toFixed(1);
-        document.getElementById('macd-sinal').innerText = macd.sinal.toFixed(1);
-        const histVal = macd.histograma;
-        document.getElementById('macd-hist').innerText = `${histVal > 0 ? '+' : ''}${histVal.toFixed(1)} ${histVal > 0 ? '↑' : '↓'}`;
-        document.getElementById('macd-hist').className = `mono ${histVal > 0 ? 'text-green-500' : 'text-red-500'}`;
-        
-        if (histVal > 0 && macd.linha > macd.sinal) {
-            document.getElementById('macd-status').className = 'status-badge status-greed';
-            document.getElementById('macd-status').innerText = '● Cruzamento Bullish';
-            document.getElementById('macd-desc').innerText = 'Histograma positivo com MACD cruzando acima do sinal. Momento de compra em curto prazo.';
-        } else if (histVal > 0) {
-            document.getElementById('macd-status').className = 'status-badge status-neutral';
-            document.getElementById('macd-status').innerText = '● Convergência';
-            document.getElementById('macd-desc').innerText = 'Histograma positivo sugere perda de momentum vendedor. Possível cruzamento bullish próximo.';
-        } else {
-            document.getElementById('macd-status').className = 'status-badge status-fear';
-            document.getElementById('macd-status').innerText = '● Bearish';
-        }
-
-        // Médias Móveis
-        document.getElementById('ma20-valor').innerText = `$${technicalData.ma20.toLocaleString()}`;
-        document.getElementById('ma50-valor').innerText = `$${technicalData.ma50.toLocaleString()}`;
-        document.getElementById('ma200-valor').innerText = `$${technicalData.ma200.toLocaleString()}`;
-        
-        const acimaMA20 = precoAtual > technicalData.ma20;
-        const acimaMA50 = precoAtual > technicalData.ma50;
-        
-        document.getElementById('ma20-trend').innerText = acimaMA20 ? '▲ Acima' : '▼ Abaixo';
-        document.getElementById('ma20-trend').className = `text-[9px] font-bold uppercase ${acimaMA20 ? 'text-green-500' : 'text-red-500'}`;
-        
-        document.getElementById('ma50-trend').innerText = acimaMA50 ? '▲ Acima' : '▼ Abaixo';
-        document.getElementById('ma50-trend').className = `text-[9px] font-bold uppercase ${acimaMA50 ? 'text-green-500' : 'text-red-500'}`;
-        
-        // Análise das MAs
-        if (!acimaMA20 && acimaMA50) {
-            document.getElementById('ma-analise').innerHTML = `
-                <span class="text-yellow-500 font-bold">Consolidação:</span> Preço abaixo da MA20 (${technicalData.ma20.toLocaleString()}) mas protegido pela MA50 (${technicalData.ma50.toLocaleString()}). 
-                Estrutura de curto prazo fraca, mas médio prazo intacto. <b>Watch:</b> Recuperação da MA20 para sinal de reversão.`;
-        } else if (acimaMA20 && acimaMA50) {
-            document.getElementById('ma-analise').innerHTML = `
-                <span class="text-green-500 font-bold">Tendência de alta:</span> Preço acima das médias móveis curtas. 
-                Estrutura bullish em ambos os prazos.`;
-        } else {
-            document.getElementById('ma-analise').innerHTML = `
-                <span class="text-red-500 font-bold">Tendência de baixa:</span> Preço abaixo das médias móveis principais. 
-                Cuidado com suportes mais abaixo.`;
-        }
-
-        // Bollinger Bands
-        document.getElementById('bb-superior').innerText = `$${technicalData.bb.superior.toLocaleString()}`;
-        document.getElementById('bb-inferior').innerText = `$${technicalData.bb.inferior.toLocaleString()}`;
-        document.getElementById('bb-preco').innerText = `$${technicalData.bb.preco.toLocaleString()}`;
-        
-        const bbRange = technicalData.bb.superior - technicalData.bb.inferior;
-        const bbPosition = ((technicalData.bb.preco - technicalData.bb.inferior) / bbRange) * 100;
-        const bbWidth = (bbRange / technicalData.bb.preco) * 100;
-        
-        document.getElementById('bb-largura').innerText = `${bbWidth.toFixed(1)}%`;
-        
-        if (bbPosition < 10) {
-            document.getElementById('bb-desc').innerHTML = `Preço <b>tocando banda inferior</b> (${bbPosition.toFixed(0)}% da largura). Condição de sobrevenda técnica. <span class="text-green-400">Possível reversão ou squeeze.</span>`;
-        } else if (bbPosition > 90) {
-            document.getElementById('bb-desc').innerText = `Preço tocando banda superior. Cuidado com correção.`;
-        } else {
-            document.getElementById('bb-desc').innerText = `Preço no meio das bandas. Sem sinal extremo.`;
-        }
-
-        // ATR
-        document.getElementById('atr-valor').innerText = `$${technicalData.atr.toLocaleString()}`;
-        const atrPct = (technicalData.atr / precoAtual) * 100;
-        document.getElementById('atr-expansao').innerText = `${atrPct > 3 ? '↑' : '↓'} ${atrPct.toFixed(1)}%`;
-        document.getElementById('atr-expansao').className = atrPct > 3 ? 'text-red-500 font-bold' : 'text-green-500 font-bold';
-        
-        if (atrPct > 3) {
-            document.getElementById('atr-desc').innerText = 'Volatilidade extrema. Candles muito grandes indicam decisão iminente do mercado.';
-        } else if (atrPct < 1.5) {
-            document.getElementById('atr-desc').innerText = 'Volatilidade comprimida. Grande movimento se aproximando (Bollinger Squeeze).';
-        }
-
-        // Volume
-        if (technicalData.volume.tendencia === 'descendente') {
-            document.getElementById('vol-trend').innerText = '▼ Descendente';
-            document.getElementById('vol-trend').className = 'text-[9px] font-bold text-green-500';
-            document.getElementById('vol-analise').innerHTML = `Volume diminuindo em queda = <span class="text-green-400">exaustão vendedora</span>. 
-                    Último candle com volume <b>${(technicalData.volume.ultimo * 100).toFixed(0)}%</b> abaixo da média.`;
-        } else {
-            document.getElementById('vol-trend').innerText = '▲ Ascendente';
-            document.getElementById('vol-trend').className = 'text-[9px] font-bold text-red-500';
-        }
-    }
-
-    function analisarVariação() {
-        const mem = JSON.parse(localStorage.getItem('cq_master_v7')) || { chart: "", onchain: "" };
+    // --- ANÁLISE ---
+    function analisar() {
         const box = document.getElementById('res-box');
         const header = document.getElementById('res-header');
         const body = document.getElementById('res-body');
-
+        
         box.classList.remove('hidden');
-
-        if (hashes.chart === mem.chart && hashes.onchain === mem.onchain && hashes.chart !== null) {
-            header.innerHTML = `<span class="text-gray-500 font-black text-[9px] uppercase italic">● Dados Idênticos Detectados</span>`;
-            body.innerHTML = `<p class="text-gray-500 italic">O sistema reconheceu estas imagens. Não houve variação nos pixels ou metadados. O cenário de <b>Capitulação</b> permanece estável conforme a última leitura. Aguarde novas movimentações on-chain.</p>`;
+        
+        const mem = JSON.parse(localStorage.getItem('cq_data') || '{"chart": "", "onchain": ""}');
+        
+        if (hashes.chart && hashes.onchain && 
+            hashes.chart === mem.chart && hashes.onchain === mem.onchain) {
+            header.innerHTML = '<span class="text-gray-500 font-black text-[9px] uppercase">● Dados Idênticos</span>';
+            body.innerHTML = '<p class="text-gray-500">Nenhuma variação detectada desde a última análise.</p>';
         } else {
-            header.innerHTML = `<span class="text-green-500 font-black text-[9px] uppercase">● Nova Variação Detectada - Processando Inteligência</span>`;
-            
-            let analiseContextual = '';
-            if (onchainData) {
-                const soprStatus = onchainData.sopr < 1.0 ? 'capitulação confirmada' : 'distribuição';
-                const netStatus = onchainData.netflow < 0 ? 'acumulação institucional' : 'pressão vendedora';
-                const fundStatus = onchainData.fundingRate < 0 ? 'pessimismo extremo' : 'otimismo';
-                
-                analiseContextual += `
-                <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-3">
-                    <p class="text-[10px] font-black text-blue-400 uppercase mb-1">Leitura On-Chain</p>
-                    <p class="text-[11px] text-gray-300">SOPR: ${onchainData.sopr.toFixed(2)} (${soprStatus}) | Netflow: ${onchainData.netflow.toLocaleString()} BTC (${netStatus}) | Funding: ${(onchainData.fundingRate*100).toFixed(3)}% (${fundStatus})</p>
-                </div>`;
-            }
-            
-            if (technicalData) {
-                const rsiStatus = technicalData.rsi < 30 ? 'sobrevendido' : technicalData.rsi > 70 ? 'sobrecomprado' : 'neutro';
-                const macdStatus = technicalData.macd.histograma > 0 ? 'bullish' : 'bearish';
-                
-                analiseContextual += `
-                <div class="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 mb-3">
-                    <p class="text-[10px] font-black text-purple-400 uppercase mb-1">Análise Técnica</p>
-                    <p class="text-[11px] text-gray-300">RSI: ${technicalData.rsi.toFixed(1)} (${rsiStatus}) | MACD: ${macdStatus} | BB: ${technicalData.bb.preco < technicalData.bb.inferior * 1.02 ? 'toque inferior' : 'meio'}</p>
-                </div>`;
-            }
-            
+            header.innerHTML = '<span class="text-green-500 font-black text-[9px] uppercase">● Nova Análise</span>';
             body.innerHTML = `
-                ${analiseContextual}
-                <p><b class="text-blue-400">Diagnóstico Técnico:</b> A mudança nos dados sugere que a exaustão vendedora está se consolidando. As "linhas curtas" nos indicadores on-chain confirmam o fim do pânico e o início da absorção.</p>
-                <p><b class="text-yellow-500">Confluência:</b> Com o Puell Multiple em 0.48 e o SOPR abaixo de 1.0, o risco-recompensa para compras spot é o melhor dos últimos 12 meses.</p>
+                <p class="text-gray-300"><b class="text-blue-400">SOPR 0.94:</b> Capitulação confirmada. Investidores vendendo no prejuízo.</p>
+                <p class="text-gray-300"><b class="text-green-400">Netflow -2,450 BTC:</b> Retirada massiva das exchanges. Pressão vendedora esgotada.</p>
+                <p class="text-gray-300"><b class="text-yellow-400">RSI 32:</b> Sobrevendido técnico. Confluência perfeita com on-chain.</p>
             `;
-            localStorage.setItem('cq_master_v7', JSON.stringify(hashes));
+            
+            localStorage.setItem('cq_data', JSON.stringify(hashes));
         }
-        window.scrollTo({ top: 500, behavior: 'smooth' });
+        
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    function switchTab(id) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + id).classList.remove('hidden');
-        document.getElementById('btn-' + id).classList.add('active');
+    // --- PREÇO EM TEMPO REAL ---
+    function conectarPreco() {
+        try {
+            wsConnection = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+            
+            wsConnection.onopen = function() {
+                console.log('WebSocket conectado');
+                document.getElementById('change').innerText = 'CONECTADO';
+                document.getElementById('change').style.color = '#10b981';
+            };
+            
+            wsConnection.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c);
+                const change = parseFloat(data.P);
+                
+                // Atualiza preço
+                document.getElementById('price').innerText = '$' + price.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                
+                // Atualiza variação
+                const changeText = (change >= 0 ? '+' : '') + change.toFixed(2) + '% AO VIVO';
+                document.getElementById('change').innerText = changeText;
+                document.getElementById('change').style.color = change >= 0 ? '#10b981' : '#ef4444';
+                
+                // Cor do preço baseado na direção
+                if (price > lastPrice) {
+                    document.getElementById('price').style.color = '#10b981';
+                } else if (price < lastPrice) {
+                    document.getElementById('price').style.color = '#ef4444';
+                } else {
+                    document.getElementById('price').style.color = '#ffffff';
+                }
+                
+                lastPrice = price;
+            };
+            
+            wsConnection.onerror = function(error) {
+                console.error('WebSocket erro:', error);
+                document.getElementById('change').innerText = 'ERRO DE CONEXÃO';
+                document.getElementById('change').style.color = '#ef4444';
+            };
+            
+            wsConnection.onclose = function() {
+                console.log('WebSocket fechado, reconectando...');
+                document.getElementById('change').innerText = 'RECONECTANDO...';
+                document.getElementById('change').style.color = '#eab308';
+                setTimeout(conectarPreco, 3000);
+            };
+            
+        } catch (e) {
+            console.error('Erro ao conectar:', e);
+            document.getElementById('change').innerText = 'ERRO';
+            setTimeout(conectarPreco, 5000);
+        }
     }
 
-    let lastP = 0;
-    function connect() {
-        const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
-        ws.onmessage = (e) => {
-            const d = JSON.parse(e.data);
-            const p = parseFloat(d.c);
-            const c = parseFloat(d.P).toFixed(2);
-            document.getElementById('price').innerText = '$' + p.toLocaleString('en-US', { minimumFractionDigits: 2 });
-            document.getElementById('change').innerText = (c > 0 ? '+' : '') + c + '% AO VIVO';
-            document.getElementById('change').style.color = c >= 0 ? '#10b981' : '#ef4444';
-            document.getElementById('price').style.color = p > lastP ? '#10b981' : (p < lastP ? '#ef4444' : 'white');
-            lastP = p;
-        };
-        ws.onclose = () => setTimeout(connect, 5000);
-    }
-    connect();
+    // --- INICIALIZAÇÃO ---
+    document.addEventListener('DOMContentLoaded', function() {
+        conectarPreco();
+        
+        // Preço inicial simulado enquanto conecta
+        document.getElementById('price').innerText = '$69,828.10';
+        lastPrice = 69828.10;
+    });
 </script>
 
 </body>
